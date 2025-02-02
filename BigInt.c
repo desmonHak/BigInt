@@ -1,66 +1,4 @@
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-
-#define SIZE 10  // Tamaño del array (para representar números de hasta 64 bits)
-
-//#define CONST_SIZE_HEX_INT (1 / log10(16))
-
-// #define CONST_SIZE_HEX_INT 0.82
-// static inline len_decimal(int len_hex) {
-//     /*
-//      * calcular el número de dígitos en decimal que se pueden representar
-//      * en función del número de dígitos hexadecimales
-//      */
-//     return (int)round(len_hex / CONST_SIZE_HEX_INT);
-// }
-// static inline len_hex(int len_int) {
-//     /*
-//      * calcular el número de dígitos en hexadecimal que se pueden representar
-//      * en función del número de dígitos decimales
-//      */
-//     return (int)round(len_int * CONST_SIZE_HEX_INT);
-// }
-
-//#if   UINTPTR_MAX == 0xffffffffffffffff
-typedef uint32_t subsize_t;
-//#elif UINTPTR_MAX == 0xffffffff
-//typedef uint16_t subsize_t;
-//#elif UINTPTR_MAX == 0xffff
-//typedef uint8_t subsize_t;
-//#endif
-
-#define CONST_SIZE_HEX_INT 82
-#define len_decimal(len_hex_) ((len_hex_ * 100 + CONST_SIZE_HEX_INT / 2) / CONST_SIZE_HEX_INT)
-#define len_hex(len_int_) ((len_int_ * CONST_SIZE_HEX_INT + 50) / 100)
-/*
- * usando float:
- * >>> 10 / 0.82
- * 12.195121951219512
- * 
- * (len_hex * 100 + CONST_SIZE_HEX_INT / 2) / CONST_SIZE_HEX_INT
- * usando int
- * >>> 10 * 82
- * 820
- * >>> 10 * 82 / 10
- * 82.0
- * >>> 82 / 2
- * 41.0
- * >>> 10 * 100
- * 1000
- * >>> 1000 + 41
- * 1041
- * >>> 1041 / 82
- * 12.695121951219512
- * >>>
- * 
- * 
- */
-
-uint64_t suma_con_desbordamiento(subsize_t a, subsize_t b, subsize_t* resultado);
+#include "BigInt.h"
 
 void suma_sin_suma(subsize_t* a, subsize_t* b, subsize_t* resultado, int size) {
     subsize_t carry = 0;
@@ -79,13 +17,12 @@ void suma_sin_suma(subsize_t* a, subsize_t* b, subsize_t* resultado, int size) {
 }
 
 void complemento_a_dos(subsize_t* num, int size) {
-    int i;
-    for (i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         num[i] = ~num[i];
     }
     
     subsize_t carry = 1;
-    for (i = 0; i < size && carry; i++) {
+    for (int i = 0; i < size && carry; i++) {
         uint64_t sum = (uint64_t)num[i] + carry;
         num[i] = (subsize_t)sum;
         carry = (subsize_t)(sum >> 32);
@@ -94,9 +31,7 @@ void complemento_a_dos(subsize_t* num, int size) {
 
 void resta_sin_resta(subsize_t* a, subsize_t* b, subsize_t* resultado, int size) {
     subsize_t b_complemento[SIZE];
-    for (int i = 0; i < size; i++) {
-        b_complemento[i] = b[i];
-    }
+    memcpy(b_complemento, b, sizeof(subsize_t) * size);
     
     complemento_a_dos(b_complemento, size);
     suma_sin_suma(a, b_complemento, resultado, size);
@@ -210,15 +145,14 @@ void imprimir_decimal(subsize_t* num, int size) {
      * 
      */
     int longitud_valor_decimal = len_decimal(longitud_hex(num, size)); // 0.82 * longitud del número hex = aprox longitud num decimal
-    char *decimal = malloc(longitud_valor_decimal);
+    char *decimal = malloc(longitud_valor_decimal + 1);
     memset(decimal, '0', longitud_valor_decimal);
     decimal[longitud_valor_decimal] = '\0';
     char *temp = calloc(longitud_valor_decimal + 1, sizeof(char));
     
-    for (int i = size - 1; i >= 0; i--) {
+for (int i = size - 1; i >= 0; i--) {
         subsize_t n = num[i];
         for (int bit = 31; bit >= 0; bit--) {
-            // Multiplicar el resultado actual por 2
             int carry = 0;
             for (int j = strlen(decimal) - 1; j >= 0; j--) {
                 int digit = (decimal[j] - '0') * 2 + carry;
@@ -230,7 +164,6 @@ void imprimir_decimal(subsize_t* num, int size) {
                 decimal[0] = carry + '0';
             }
             
-            // Sumar el bit actual
             if (n & (1U << bit)) {
                 carry = 1;
                 for (int j = strlen(decimal) - 1; j >= 0 && carry; j--) {
@@ -247,6 +180,9 @@ void imprimir_decimal(subsize_t* num, int size) {
     }
     
     printf("%s", decimal);
+    free(decimal);
+    free(temp);
+
 }
 
 
@@ -278,6 +214,26 @@ int longitud_hex(subsize_t* num, int size) {
     return (longitud - 1) * 8 + digitos;
 }
 
+
+// Multiplica la representación entera (mantisa) por 10.
+void multiplicar_por_10(subsize_t* num, int size) {
+    uint64_t carry = 0;
+    for (int i = 0; i < size; i++) {
+        uint64_t prod = (uint64_t)num[i] * 10 + carry;
+        num[i] = (subsize_t)(prod % 1000000000);
+        carry = prod / 1000000000;
+    }
+}
+ 
+// Divide la representación entera (mantisa) entre 10.
+void dividir_por_10(subsize_t* num, int size) {
+    uint64_t remainder = 0;
+    for (int i = size - 1; i >= 0; i--) {
+        uint64_t cur = remainder * 1000000000ULL + num[i];
+        num[i] = (subsize_t)(cur / 10);
+        remainder = cur % 10;
+    }
+}
 
 
 // Función para verificar si un número es cero
@@ -465,15 +421,6 @@ void string_a_array(const char* num_str, subsize_t* arr, int size) {
     }
 }
 
-
-typedef struct {
-    subsize_t mantisa[SIZE];  // Mantisa como un número entero grande
-    int exponente;            // Exponente como un entero simple
-    int signo;                // 0 para positivo, 1 para negativo
-} float_grande;
-
-bool es_mayor_o_igual(subsize_t* a, subsize_t* b, int size_a, int size_b) ;
-
 void normalizar_float_grande(float_grande* num) {
     while (num->mantisa[SIZE-1] >= 10) {
         dividir_por_10(num->mantisa, SIZE);
@@ -615,26 +562,10 @@ void dividir_float_grande(float_grande* a, float_grande* b, float_grande* result
 void imprimir_float_grande(float_grande* num) {
     printf("%s0.", num->signo ? "-" : "");
     imprimir_decimal(num->mantisa, SIZE);
-    printf(" x 10^%d", num->exponente);
+    //printf(" x 10^%d", num->exponente);
 }
 
-void dividir_por_10(subsize_t* num, int size) {
-    subsize_t carry = 0;
-    for (int i = size - 1; i >= 0; i--) {
-        uint64_t current = ((uint64_t)carry << 32) | num[i];
-        num[i] = (subsize_t)(current / 10);
-        carry = (subsize_t)(current % 10);
-    }
-}
 
-void multiplicar_por_10(subsize_t* num, int size) {
-    subsize_t carry = 0;
-    for (int i = 0; i < size; i++) {
-        uint64_t product = (uint64_t)num[i] * 10 + carry;
-        num[i] = (subsize_t)(product & 0xFFFFFFFF);
-        carry = (subsize_t)(product >> 32);
-    }
-}
 bool es_mayor_o_igual(subsize_t* a, subsize_t* b, int size_a, int size_b) {
     for (int i = size_a - 1, j = size_b - 1; i >= 0 && j >= 0; i--, j--) {
         if (a[i] > b[j]) return true;
