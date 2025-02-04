@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define SIZE (9000 / 32)  // Tamaño del array (para representar números de hasta 64 bits)
+#define SIZE 10  // Tamaño del array (para representar números de hasta 64 bits)
 
 //#define CONST_SIZE_HEX_INT (1 / log10(16))
 

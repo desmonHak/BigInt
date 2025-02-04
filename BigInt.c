@@ -193,7 +193,7 @@ void imprimir_decimal(subsize_t* num, int size) {
     decimal[longitud_valor_decimal] = '\0';
     char *temp = calloc(longitud_valor_decimal + 1, sizeof(char));
     
-for (int i = size - 1; i >= 0; i--) {
+    for (int i = size - 1; i >= 0; i--) {
         subsize_t n = num[i];
         for (int bit = 31; bit >= 0; bit--) {
             int carry = 0;
@@ -289,19 +289,24 @@ size_t longitud_hex(subsize_t* num, size_t size) {
 
 // Multiplica la representación entera (mantisa) por 10.
 void multiplicar_por_10(subsize_t* num, int size) {
-    uint64_t carry = 0;
+    size_t carry = 0;
     for (int i = 0; i < size; i++) {
-        uint64_t prod = (uint64_t)num[i] * 10 + carry;
-        num[i] = (subsize_t)(prod % 1000000000);
-        carry = prod / 1000000000;
+        size_t prod = (size_t)num[i] * 10 + carry;
+        num[i] = (subsize_t)(prod & 0xFFFFFFFF);
+        carry = prod >> 32;
+    }
+    // Si hay carry al final y espacio en el array, añadirlo
+    if (carry && size < SIZE) {
+        num[size] = (subsize_t)carry;
     }
 }
+
  
 // Divide la representación entera (mantisa) entre 10.
 void dividir_por_10(subsize_t* num, int size) {
-    uint64_t remainder = 0;
+    size_t remainder = 0;
     for (int i = size - 1; i >= 0; i--) {
-        uint64_t cur = remainder * 1000000000ULL + num[i];
+        size_t cur = remainder * 1000000000ULL + num[i];
         num[i] = (subsize_t)(cur / 10);
         remainder = cur % 10;
     }
@@ -477,7 +482,6 @@ void string_a_array(const char* num_str, subsize_t* arr, int size) {
         return;
     }
     size_t len = strlen(num_str);
-    puts("a");
     
     memset(arr, 0, sizeof(subsize_t) * size);
 
@@ -588,48 +592,7 @@ void normalizar_float_grande(float_grande* num) {
 
 
 
-void inicializar_float_grande(float_grande* num, const char* valor_str) {
-    memset(num, 0, sizeof(float_grande));
-    const char* ptr = valor_str;
-    
-    if (*ptr == '-') {
-        num->signo = 1;
-        ptr++;
-    }
-
-    char mantisa_str[1000] = {0};
-    int mantisa_len = 0;
-    int punto_decimal = -1;
-
-    while (*ptr && mantisa_len < 999) {
-        if (*ptr >= '0' && *ptr <= '9') {
-            mantisa_str[mantisa_len++] = *ptr;
-        } else if (*ptr == '.' && punto_decimal == -1) {
-            punto_decimal = mantisa_len;
-        } else if (*ptr == 'e' || *ptr == 'E') {
-            break;
-        }
-        ptr++;
-    }
-
-    if (punto_decimal == -1) punto_decimal = mantisa_len;
-    num->exponente = punto_decimal - mantisa_len;
-
-    if (*ptr == 'e' || *ptr == 'E') {
-        ptr++;
-        int exp_sign = (*ptr == '-') ? -1 : 1;
-        if (*ptr == '+' || *ptr == '-') ptr++;
-        int exp = 0;
-        while (*ptr >= '0' && *ptr <= '9') {
-            exp = exp * 10 + (*ptr - '0');
-            ptr++;
-        }
-        num->exponente += exp_sign * exp;
-    }
-
-    string_a_array(mantisa_str, num->mantisa, SIZE);
-    normalizar_float_grande(num);
-}
+// b < a
 bool es_menor(subsize_t* a, subsize_t* b) {
     for (int i = 0; i < SIZE; i++) {
         if (a[i] < b[i]) return true;
@@ -638,210 +601,67 @@ bool es_menor(subsize_t* a, subsize_t* b) {
     return false;
 }
 
-
-void sumar_float_grande(float_grande* a, float_grande* b, float_grande* resultado) {
-    //if (a->exponente < b->exponente)  {b->exponente = a->exponente;}
-    float_grande temp_a = *a, temp_b = *b;
-    int diff_exp = temp_a.exponente - temp_b.exponente;
-    
-    // Alinear exponentes
-    if (diff_exp > 0) {
-        for (int i = 0; i < diff_exp; i++) dividir_por_10(temp_b.mantisa, SIZE);
-    } else if (diff_exp < 0) {
-        for (int i = 0; i < -diff_exp; i++) dividir_por_10(temp_a.mantisa, SIZE);
-    }
-
-    // Realizar la suma
-    suma_sin_suma(temp_a.mantisa, temp_b.mantisa, resultado->mantisa, SIZE);
-    resultado->exponente = (diff_exp > 0) ? temp_a.exponente : temp_b.exponente;
-    resultado->signo = 0;  // Asumimos que ambos números son positivos por ahora
-
-    normalizar_float_grande(resultado);
-}
-
-
-void multiplicar_float_grande(float_grande* a, float_grande* b, float_grande* resultado) {
-    // Separar partes enteras y decimales
-    float_grande a_entero, a_decimal, b_entero, b_decimal;
-    separar_partes(a, &a_entero, &a_decimal);
-    separar_partes(b, &b_entero, &b_decimal);
-
-    // Multiplicar partes enteras
-    float_grande resultado_entero;
-    multiplicar_partes(&a_entero, &b_entero, &resultado_entero);
-
-    // Multiplicar partes decimales
-    float_grande resultado_decimal;
-    multiplicar_partes(&a_decimal, &b_decimal, &resultado_decimal);
-
-    // Multiplicar cruzado y sumar
-    float_grande temp1, temp2;
-    multiplicar_partes(&a_entero, &b_decimal, &temp1);
-    multiplicar_partes(&a_decimal, &b_entero, &temp2);
-
-    // Sumar todos los resultados
-    sumar_float_grande(&resultado_entero, &resultado_decimal, resultado);
-    sumar_float_grande(resultado, &temp1, resultado);
-    sumar_float_grande(resultado, &temp2, resultado);
-
-    resultado->signo = a->signo ^ b->signo;
-
-    // Normalizar el resultado final
-    normalizar_float_grande(resultado);
-}
-
-void separar_partes(float_grande* num, float_grande* entero, float_grande* decimal) {
-    *entero = *num;
-    *decimal = *num;
-
-    if (num->exponente >= 0) {
-        // Todo es parte entera
-        decimal->mantisa[0] = 0;
-        decimal->exponente = 0;
-    } else if (num->exponente < -9 * (SIZE - 1)) {
-        // Todo es parte decimal
-        entero->mantisa[0] = 0;
-        entero->exponente = 0;
-    } else {
-        int shift = -num->exponente / 9;
-        for (int i = 0; i < SIZE - shift; i++) {
-            entero->mantisa[i] = num->mantisa[i + shift];
-        }
-        for (int i = SIZE - shift; i < SIZE; i++) {
-            entero->mantisa[i] = 0;
-        }
-        entero->exponente = 0;
-
-        for (int i = 0; i < shift; i++) {
-            decimal->mantisa[i] = num->mantisa[i];
-        }
-        for (int i = shift; i < SIZE; i++) {
-            decimal->mantisa[i] = 0;
-        }
-        decimal->exponente = num->exponente;
-    }
-}
-int longitud_decimal(subsize_t num) {
-    if (num == 0) return 1;
-    int len = 0;
-    while (num > 0) {
-        num /= 10;
-        len++;
-    }
-    return len;
-}
-
-void multiplicar_partes(float_grande* a, float_grande* b, float_grande* resultado) {
-    subsize_t producto[SIZE * 2] = {0};
-
-    for (int i = 0; i < SIZE; i++) {
-        uint64_t carry = 0;
-        for (int j = 0; j < SIZE; j++) {
-            uint64_t temp = producto[i + j] + (uint64_t)a->mantisa[i] * b->mantisa[j] + carry;
-            producto[i + j] = temp % 1000000000;
-            carry = temp / 1000000000;
-        }
-        producto[i + SIZE] = carry;
-    }
-
-    // Calcular el exponente como la suma de los exponentes de ambos números
-    resultado->exponente = a->exponente + b->exponente;
-
-    // Ahora corregir el exponente en función del desplazamiento de ceros en la mantisa
-    int shift = 0;
-    while (shift < SIZE * 2 && producto[shift] == 0) {
-        shift++;
-    }
-
-    // Ajustar el exponente según el número de ceros desplazados
-    resultado->exponente -= shift * 9;
-
-    // Copiar los valores de la mantisa desplazados correctamente
-    for (int i = 0; i < SIZE; i++) {
-        resultado->mantisa[i] = (i + shift < SIZE * 2) ? producto[i + shift] : 0;
-    }
-
-    // Ahora normalizar el número para corregir el exponente si es necesario
-    normalizar_float_grande(resultado);
-}
-
-void dividir_float_grande(float_grande* a, float_grande* b, float_grande* resultado) {
-    // Comprobar si el divisor es cero
-    if (es_cero(b->mantisa, SIZE)) {
-        printf("Error: División por cero\n");
-        return;
-    }
-
-    // Inicializar el resultado
-    resultado->signo = a->signo ^ b->signo;
-    
-    // Preparar las mantisas para la división
-    subsize_t dividendo[SIZE * 2] = {0};
-    subsize_t divisor[SIZE * 2] = {0};
-    memcpy(dividendo, a->mantisa, sizeof(subsize_t) * SIZE);
-    memcpy(divisor, b->mantisa, sizeof(subsize_t) * SIZE);
-
-    // Normalizar el dividendo y el divisor
-    int shift_dividendo = 0, shift_divisor = 0;
-    while (dividendo[SIZE * 2 - 1] == 0 && !es_cero(dividendo, SIZE * 2)) {
-        desplazar_izquierda(dividendo, SIZE * 2, 1);
-        shift_dividendo++;
-    }
-    while (divisor[SIZE * 2 - 1] == 0 && !es_cero(divisor, SIZE * 2)) {
-        desplazar_izquierda(divisor, SIZE * 2, 1);
-        shift_divisor++;
-    }
-
-    // Realizar la división
-    subsize_t cociente[SIZE * 2] = {0};
-    int precision = SIZE * 64;  // Precisión deseada en bits
-
-    for (int i = 0; i < precision; i++) {
-        if (es_mayor_o_igual(dividendo, divisor, SIZE * 2)) {
-            resta_arreglos(dividendo, divisor, dividendo, SIZE * 2);
-            cociente[0] |= 1;
-        }
-        desplazar_izquierda(cociente, SIZE * 2, 1);
-        desplazar_izquierda(dividendo, SIZE * 2, 1);
-    }
-
-    // Copiar el resultado al float_grande
-    memcpy(resultado->mantisa, cociente, sizeof(subsize_t) * SIZE);
-
-    // Ajustar el exponente
-    resultado->exponente = a->exponente - b->exponente - shift_dividendo + shift_divisor;
-
-    // Normalizar el resultado
-    normalizar_float_grande(resultado);
-}
-
-
-
-
 void imprimir_float_grande(float_grande* num) {
     if (num->signo) printf("-");
     
-    // Imprimir los dígitos significativos
-    int digitos_impresos = 0;
-    bool imprimiendo = false;
+    int longitud_valor_decimal = len_decimal(longitud_hex(num->mantisa, SIZE));
+    char *decimal = malloc(longitud_valor_decimal + 1);
+    memset(decimal, '0', longitud_valor_decimal);
+    decimal[longitud_valor_decimal] = '\0';
+    
     for (int i = SIZE - 1; i >= 0; i--) {
-        subsize_t valor = num->mantisa[i];
-        for (int j = 0; j < 9; j++) {  // Cada subsize_t puede contener hasta 9 dígitos
-            int digito = valor / 100000000;
-            if (digito != 0 || imprimiendo) {
-                printf("%d", digito);
-                imprimiendo = true;
-                digitos_impresos++;
+        subsize_t n = num->mantisa[i];
+        for (int bit = 31; bit >= 0; bit--) {
+            int carry = 0;
+            for (int j = longitud_valor_decimal - 1; j >= 0; j--) {
+                int digit = (decimal[j] - '0') * 2 + carry;
+                decimal[j] = (digit % 10) + '0';
+                carry = digit / 10;
             }
-            valor = (valor % 100000000) * 10;
+            if (carry) {
+                memmove(decimal + 1, decimal, longitud_valor_decimal);
+                decimal[0] = carry + '0';
+            }
+            
+            if (n & (1U << bit)) {
+                carry = 1;
+                for (int j = longitud_valor_decimal - 1; j >= 0 && carry; j--) {
+                    int digit = (decimal[j] - '0') + carry;
+                    decimal[j] = (digit % 10) + '0';
+                    carry = digit / 10;
+                }
+                if (carry) {
+                    memmove(decimal + 1, decimal, longitud_valor_decimal);
+                    decimal[0] = '1';
+                }
+            }
         }
     }
     
-    if (digitos_impresos == 0) {
-        printf("0");
+    // Imprimir el número con el punto decimal en la posición correcta
+    int punto_decimal = longitud_valor_decimal + num->exponente;
+    if (punto_decimal <= 0) {
+        printf("0.");
+        for (int i = 0; i < -punto_decimal; i++) {
+            printf("0");
+        }
+        printf("%s", decimal);
+    } else if (punto_decimal >= longitud_valor_decimal) {
+        printf("%s", decimal);
+        for (int i = 0; i < punto_decimal - longitud_valor_decimal; i++) {
+            printf("0");
+        }
+    } else {
+        for (int i = 0; i < punto_decimal; i++) {
+            printf("%c", decimal[i]);
+        }
+        printf(".");
+        for (int i = punto_decimal; i < longitud_valor_decimal; i++) {
+            printf("%c", decimal[i]);
+        }
     }
     
-    printf(" x 10^%d", num->exponente);
+    free(decimal);
 }
 
 int contar_digitos(subsize_t* cociente, int size) {
@@ -868,8 +688,43 @@ int contar_digitos(subsize_t* cociente, int size) {
 }
 
 
-#define MAX_ITERACIONES 32
+#define MAX_ITERACIONES 64
 void division_float_grande(subsize_t* a, subsize_t* b, float_grande* resultado) {
+    /*
+        1.000000003259629
+        0xFFFFFFFF / 0xFFFFFFF1 = 1
+        0xFFFFFFFF % 0xFFFFFFF1 = 0xe
+        4294967295 % 4294967281 = 14
+        14 % 4294967281 = 0
+
+        140 % 4294967281 = 0
+        0x8c
+
+        1400 % 4294967281 = 0
+        0x578
+
+        14000 % 4294967281 = 0
+        0x36b0
+
+        140000 % 4294967281 = 0
+        0x222e0
+
+        1400000 % 4294967281 = 0
+        0x155cc0
+
+        14000000 % 4294967281 = 0
+        0xd59f80
+
+        140000000 % 4294967281 = 0
+        0x8583b00
+
+        1400000000 % 4294967281 = 0
+        0x53724e00
+
+        14000000000 / 4294967281 = 3
+        14000000000 % 4294967281 = 1115098157
+        0x342770c00 
+     */
     // Comprobar si el divisor es cero
     if (es_cero(b, SIZE)) {
         printf("Error: División por cero\n");
@@ -880,12 +735,6 @@ void division_float_grande(subsize_t* a, subsize_t* b, float_grande* resultado) 
 
     // Llamamos a la función de división
     division_booth(a, b, cociente, residuo, SIZE);
-    printf("Cociente: ");
-    imprimir_hex(cociente, SIZE);
-    printf("\nResiduo: ");
-    imprimir_hex(residuo, SIZE);
-    printf("\n");
-
     
     memset(resultado, 0, sizeof(float_grande));
     memcpy(&(resultado->mantisa), cociente, SIZE); // copiar el cociente al resultado
@@ -902,52 +751,23 @@ void division_float_grande(subsize_t* a, subsize_t* b, float_grande* resultado) 
         while (!es_cero(residuo, SIZE) && iteraciones < MAX_ITERACIONES) {
             iteraciones++;
             
-            // Si el residuo es menor que el divisor, multiplicar el residuo por 10
-            if (es_menor(b, residuo)) {
-                multiplicar_por_10(residuo, SIZE);
-            } else {
-                subsize_t cociente_temp[SIZE] = {0};
-                subsize_t residuo_temp[SIZE] = {0};
-                subsize_t resultado_temp[SIZE] = {0};
+            multiplicar_por_10(residuo, SIZE);
+            
+            subsize_t cociente_temp[SIZE] = {0};
+            subsize_t residuo_temp[SIZE] = {0};
 
-                // Realizar la división sobre el residuo
-                division_booth(residuo, b, cociente_temp, residuo_temp, SIZE);
-                //  cociente_temp = residuo / b
-                //  residuo_temp  = residuo % b
+            division_booth(residuo, b, cociente_temp, residuo_temp, SIZE);
 
-                multiplicar_por_10(residuo_temp, SIZE);
-                // residuo_temp *= 10
+            multiplicar_por_10(resultado->mantisa, SIZE);
+            suma_sin_suma(resultado->mantisa, cociente_temp, resultado->mantisa, SIZE);
 
-                // Desplazar la mantisa del resultado
-                multiplicar_por_10(resultado->mantisa, SIZE);
-                // mantisa *= 10
-
-                
-                // Sumar el cociente intermedio al resultado final
-                suma_sin_suma(resultado->mantisa, cociente_temp, resultado_temp, SIZE);
-                // resultado_temp = resultado_temp + cociente_temp
-
-                memcpy(&(resultado->mantisa), resultado_temp, SIZE);
-
-                // Imprimir estado intermedio
-                printf("Cociente Temp: ");
-                imprimir_hex(cociente_temp, SIZE);
-                printf("\nResiduo Temp: ");
-                imprimir_hex(residuo_temp, SIZE);
-                
-
-                // Actualizamos el residuo
-                memcpy(residuo, residuo_temp, SIZE);
-                resultado->exponente++;  // Ajustar el exponente
-            }
-            printf("\nfloat: ");
-                imprimir_float_grande(resultado);
-                printf("\n");
+            memcpy(residuo, residuo_temp, SIZE);
+            resultado->exponente--;
         }
+        // Normalizar el resultado
+        normalizar_float_grande(resultado);
     }
-    resultado->exponente *=-1;
-    // Normalizar el resultado
-    //normalizar_float_grande(resultado);
+    
 }
 
 
@@ -998,8 +818,10 @@ void generate_randomNumber(subsize_t* a, subsize_t* b, float_grande* resultado) 
 
 
 int main() {
+    /*
+    #define SIZE_BIGINT_8096 (9000 / 32)
 
-    subsize_t Big8096_1[SIZE] = {0};
+    subsize_t Big8096_1[SIZE_BIGINT_8096] = {0};
     string_a_array("0xc26ec4ed1870c34dffd110454de819992258b173d5189399fcdaa205ba44effec7fa789c4616c0b2c4398da6a276c6b049fad4d5ad9aabfcc9cc2d5117ee3a2b302b213db24757630eaaeeb1922e3ed5e8ef1716a9005675da846d78ac7d1637998a659c25672038d65932e37f8c47d6b70bf42013dc71b6176f7bc97a8e35374cc5d94c827574d38a0e8371025c400030b164ada6834fffa83b05dce52b0b10ceb1450843369cffda8aaf2e77e22c7e785e132ce87c205e99fc832ac411bc7cd965f3129e08784ee64214e5a0e8eb0d5a772189ab5dc965559a245800160069ae3c42fa5aaf6c5c5065de88fd34391fb9102722f31cb90bbf340619630cc7ada552e4bddd82930f6bf7b472addb7e239575387310d27137a68256768b1b42935791e5dfe0d26244d0fbaf0e20c77bcb848ea0a7bd624aaf873cdbaf757e34bc002f243da515fc7526ecc22ea56a998e7f7389530316d1d6da0968864215194d44a618fc2f253a0991dc3d60634a48d02b887a4621771baa6a9a809f54a3701faa0152a9e97b4240f775a8210d2214831d0ac4cea1bddbd702a7aa2adbba84ffea9e03e22e810fa0b8b9dcffeffcfe96c63d765d8387e71d41f905a20011256a16430851c32523f4a125093ad2c88a151fe0ee1a22b0c0118654b0c3e30acc4e254a09b4e709246653df58471a6f8a44e11d144ef39ff6e4e4250a5375ec07672d3947298f738270b1302dc9f50cd7388bebf14e77502557a0333cab137c0b35ef9780dacb390d43fd1ad8f22e18edd49f1e02aa38919c49826785b97121c439f709e95ed70163290a49271f8f2819362b61a716ba08d9ac3ff22f2ee89548161b786c092874edc1c15426618fd09bb8c5ec26dbd4ad398a1b48fe62e66c02f514158a53c776ae423a4ac699742d3bd90114c3344704601ad6059fa3f1bc8fc8b47962d58762c876ffa11fa0fe7b6d1f73c87ffac4838c5e727399383b48df71056b0103b6a69b3639ef7dc8cfdeae9cdda4790032771a923c55b1ab70082b8a6a6860c0ce094fbd31a45c079cd525c4c8924ccf61112b2d43755c4b8d62f343674144dc407eac39c4ae2d5ce1e36417509f60cb0da69c0f8f16a008b8be6febfaf9ad807924dfdfd25c8ec36b9a41f5d20bd5bfd135d3aa1655d557957623b156c3f2c7934abb8b739dd0ad8d8c8173f6df892f7c9e640dc92cfd9b67f2f64884d1c2f47f9c4720928bdc714071f5f18b3434affd40f93e5da808cd95f271a40efa1616639a7eb0c02a2795e4eba882f81631b9d9a7a32abdf9d229d12e059b87448712f71c084cea3d56d6ed8ec4fec26bee6f7533b4809f254fd6eb0141c652a12c0eacb2b513d5074f1cbd7dff114f93414573b1d8a6c06610533fad0a488ec48dc7325034870ef985547e49ba70d5c9cfb7",
     Big8096_1, sizeof(Big8096_1) / sizeof(subsize_t));
     printf("Resultado longitud_hex: %d, en decimal: %d \n", 
@@ -1011,7 +833,7 @@ int main() {
     printf("\n");
 
 
-    subsize_t Big8096_2[SIZE] = {0};
+    subsize_t Big8096_2[SIZE_BIGINT_8096] = {0};
     string_a_array("10128885721058409803664319139594583192517508446123665050358575548361261447151826537864583512198659795755550722363825886970527917839965349362677168604417109001112679000419261177596989305717312224003400240257168405461590096090962648372132839098849101424018470574334848974705135897391209601171882787719277830629728181337101214941192220038744058677045705323371358822627339007779127280392926896362047314500907712659638730466303339198437483074060872440807651371764072907894368700856824488299066224418263056282354911962863172947531348689108682635431121748948617976166797053780421641760092226760779737386134047352798485939855834126546749333253218411827287990631341245273051120698098111586206587599691123510953377140936649661994198007857777455731865514692026439605098364563727861345333442093306457824519948525732309240603477946496512743076612987297265933525043201953423110052841800951931549100818353498815945856248584075784127140326545918221515908567191911740253846780643791067392186783939289784550707608614967354135428852288104746944089029701580211739285959326435477317502374243382619444552030498369705717686099442834471556211780802833403159072258761145577820377517499715090545729847900716761592377068031881638128400424869899446719940156094146716984341579217733508760393729575190948842842875074946947101043924824150883060691628588555764664995268180924744722378720276313492306960382498214999208649287252382458891688523580800620854432343509244245389941946377540028181049455128282568314614136199439691101562963341564550761681853104965913330169929536428120609356172663544290376899865091135486379474813610776766860405334754638377496932854732203911588874972056361170705706858664473673808303463701719234237060047876383222623049726012080706494234744381196892105280966158525441463386533784786622069725029922771032703156802531622419268917917272391116314378019528545156950527122834381742461253755086252964636735314311176824910922143749506455094366452946784396356067981000053838215494000289618508837870121541728502319376850912649512534298906660116988894173343139581123816706723742915898634441989009133499229127890803022528026220539193624315934706696091027669180289463505305576305565161175878142481534131886196388568607713549718905641968145468548545926207513163233092369957488416383764069991144040999821039940019247982347990833552080147620878772067032030011262008763081889553247652251718201322531115689807246953905062117632070412706704934413302658516776531099",
     Big8096_2, sizeof(Big8096_2) / sizeof(subsize_t));
     printf("Resultado longitud_hex: %d, en decimal: %d \n", 
@@ -1023,8 +845,8 @@ int main() {
     printf("\n");
 
 
-    subsize_t resultadoBig8089[SIZE * 2] = {0};  // Donde se almacenará el resultado
-    suma_sin_suma(Big8096_1, Big8096_2, resultadoBig8089, SIZE * 2);
+    subsize_t resultadoBig8089[SIZE_BIGINT_8096 * 2] = {0};  // Donde se almacenará el resultado
+    suma_sin_suma(Big8096_1, Big8096_2, resultadoBig8089, SIZE_BIGINT_8096 * 2);
 
     // Imprimir el resultado en formato hexadecimal
     printf("Resultado Suma BigInt8096: 0x");
@@ -1032,6 +854,7 @@ int main() {
     printf("\nResultado Suma BigInt8096: ");
     imprimir_decimal(resultadoBig8089, sizeof(Big8096_2) / sizeof(subsize_t));
     printf("\n");
+    */
 
 
     subsize_t a[SIZE] = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};  // Representa 0x00000001FFFFFFFF
@@ -1084,8 +907,8 @@ int main() {
         printf("Resultado: 0x%08X\n", resultadoa);
     }
 
-    subsize_t aaaa[SIZE] = {0xFFFFFFFF, 0x00000000};  // Representa 0x00000001FFFFFFFF
-    subsize_t bbbb[SIZE] = {0xFFFFFFF1, 0x00000000};  // Representa 0x0000000000000001
+    subsize_t aaaa[SIZE] = {1, 0x00000000};  // Representa 0x00000001FFFFFFFF
+    subsize_t bbbb[SIZE] = {3, 0x00000000};  // Representa 0x0000000000000001
     subsize_t cociente[SIZE] = {0};   // Donde almacenaremos el cociente
     subsize_t residuo[SIZE] = {0};    // Donde almacenaremos el residuo
     
@@ -1105,6 +928,7 @@ int main() {
 
     float_grande resultado_div;
     division_float_grande(aaaa, bbbb, &resultado_div);
+    printf("imprimir_float_grande: ");
     imprimir_float_grande(&resultado_div);
     printf("\n");
 
@@ -1151,48 +975,6 @@ int main() {
     printf("\n");
     imprimir_hex(aaa, SIZE);
     printf("\n");
-
-    float_grande num1, num2, resultadof;
-    memset(&num1, 0, sizeof(float_grande));
-    memset(&num2, 0, sizeof(float_grande));
-    memset(&resultadof, 0, sizeof(float_grande));
-
-    // Inicializar dos números de punto flotante grandes
-    inicializar_float_grande(&num1, "2.456");
-    inicializar_float_grande(&num2, "45.9");
-
-    printf("Numero 1: ");
-    imprimir_float_grande(&num1);
-    printf("\n");
-
-    printf("Numero 2: ");
-    imprimir_float_grande(&num2);
-    printf("\n");
-
-    // Sumar los dos números
-    sumar_float_grande(&num1, &num2, &resultadof);
-    printf("Suma: ");
-    imprimir_float_grande(&resultadof);
-    printf("\n");
-
-    // Multiplicar los dos números
-    multiplicar_float_grande(&num1, &num2, &resultadof);
-    printf("Multiplicacion: ");
-    imprimir_float_grande(&resultadof);
-    printf("\n");
-
-    // Dividir num1 entre num2
-    dividir_float_grande(&num1, &num2, &resultadof);
-    printf("Division (num1 / num2): ");
-    imprimir_float_grande(&resultadof);
-    printf("\n");
-
-    // Probar con un número negativo
-    inicializar_float_grande(&num1, "-34.23456789");
-    printf("Numero negativo: ");
-    imprimir_float_grande(&num1);
-    printf("\n");
-
 
     return 0;
 }
