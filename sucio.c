@@ -1,4 +1,4 @@
-#include "BigInt.h"
+#include "sucio.h"
 
 void suma_sin_suma(subsize_t* a, subsize_t* b, subsize_t* resultado, int size) {
     subsize_t carry = 0;
