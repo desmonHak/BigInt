@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     m2.number[0] = 497;
 
     printf("Ejemplo: exponenciacion_modular\n");
-    modpow(&base2, &exponente2, &m2, &resultado2);
+    modpow_BigInt(&base2, &exponente2, &m2, &resultado2);
     printf("resultado: 0x");
     hex_dump_BigInt(&resultado2);
     printf("\n");
@@ -146,15 +146,15 @@ int main(int argc, char *argv[]) {
     base.number[0] = 2;
     exponente.number[0] = 11;
 
-    //printf("Ejemplo 1: Exponente chiquito (10)\n");
-    //pow(&base, &exponente, &base, &resultado1);  // reusing "base" as modulo
-    //printf("resultado1: 0x");
-    //imprimir_hex(&resultado1);
-    //printf("\n");
+    printf("Ejemplo 1: Exponente chiquito (10)\n");
+    pow_BigInt(&base, &exponente, &resultado1);  // reusing "base" as modulo
+    printf("resultado1: 0x");
+    hex_dump_BigInt(&resultado1);
+    printf("\n");
 
 
 
-
+    
 
 
 

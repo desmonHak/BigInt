@@ -93,13 +93,14 @@ void decimal_dump_BigInt(const BigInt_t* big_int);
 size_t count_hex_digit_BigInt(const BigInt_t* big_int);
 void add_BigInt(const BigInt_t* a, const BigInt_t* b, BigInt_t* resultado);
 void sub_BigInt(const BigInt_t* a, const BigInt_t* b, BigInt_t* resultado);
-
-void complemento_a_dos(BigInt_t* big_int);
-bool es_cero(const BigInt_t* big_int);
-void modpow(
+void pow_BigInt(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
+void modpow_BigInt(
     const BigInt_t* base, const BigInt_t* exponente, 
     const BigInt_t* modulo, BigInt_t* resultado
 );
+
+void complemento_a_dos(BigInt_t* big_int);
+bool es_cero(const BigInt_t* big_int);
 
 void div_booth(
     BigInt_t* dividend, 
@@ -111,7 +112,6 @@ void div_booth(
 void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado);
 
 uint64_t add_with_overflow(subsize_t a, subsize_t b, subsize_t* resultado);
-
 
 void imprimir_float_grande(float_grande* num);
 void normalizar_float_grande(float_grande* num);

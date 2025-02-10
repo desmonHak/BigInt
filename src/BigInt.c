@@ -329,12 +329,12 @@ void complemento_a_dos(BigInt_t* big_int) {
 
 
 // exponenciacion_modular
-void modpow(
+void modpow_BigInt(
     const BigInt_t* base, const BigInt_t* exponente, 
     const BigInt_t* modulo, BigInt_t* resultado
     ) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
-        INIT_TYPE_FUNC_DBG(void, modpow)
+        INIT_TYPE_FUNC_DBG(void, modpow_BigInt)
         TYPE_DATA_DBG(BigInt_t*, "base = %p")
         TYPE_DATA_DBG(BigInt_t*, "exponente = %p")
         TYPE_DATA_DBG(BigInt_t*, "modulo = %p")
@@ -794,3 +794,118 @@ void suma_sin_suma(BigInt_t* a, BigInt_t* b, BigInt_t* resultado) {
 }
 
 
+/* 
+ * (Exponentiation by squaring - fast exponentiation)
+ * Function that performs fast exponentiation using repeated multiplications
+ * This is an efficient method for calculating the power of a number, especially 
+ * when exponents are large. The algorithm is based on the binary decomposition 
+ * of the exponent and allows reducing the number of multiplications needed.
+ * 
+ * The algorithm works as follows:
+ * 
+ *  - If the exponent is 0, the result is 1 (any number raised to 0 is 1).
+ *  - If the exponent is odd, you can decompose it into base x = base x (base - 1)base x =base x(basex - 1 ).
+ *  - If the exponent is even, you can decompose it into basex = (base x / 2 ) 2 base x = (base x/2 ) 2.
+ */ 
+void pow_BigInt_rapida(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado) {
+    size_t size = base->size;
+    BigInt_t temp_result = {calloc(size * 2, sizeof(subsize_t)), size};
+    temp_result.number[0] = 1;  // Initialize the result as 1
+
+    BigInt_t base_temp = {calloc(size  * 2, sizeof(subsize_t)), size};
+    memcpy(base_temp.number, base->number, sizeof(subsize_t) * size);
+
+    BigInt_t exponente_temp = {calloc(size, sizeof(subsize_t)), size};
+    memcpy(exponente_temp.number, exponente->number, sizeof(subsize_t) * size);
+
+    while (!es_cero(&exponente_temp)) {
+        // If the exponent is odd, multiply the result by the base
+        if (exponente_temp.number[0] & 1) {
+            mult_arr(&temp_result, &base_temp, &temp_result);
+        }
+
+        // Raise the base to the square (base = base * base)
+        mult_arr(&base_temp, &base_temp, &base_temp);
+
+        // Divide the exponent by 2 (shift to the right)
+        dividir_por_2(&exponente_temp);
+    }
+
+    // In the end, the result is in temp_result
+    memcpy(resultado->number, temp_result.number, sizeof(subsize_t) * size);
+     free(temp_result.number);
+    free(base_temp.number);
+    free(exponente_temp.number);
+}
+
+void desplazar_izquierda(BigInt_t *arr, int shift) {
+    int size = arr->size;
+    for (int i = 0; i < size - shift; i++) {
+        arr->number[i] = arr->number[i + shift];
+    }
+    for (int i = size - shift; i < size; i++) {
+        arr->number[i] = 0;
+    }
+}
+void desplazar_derecha(BigInt_t *arr, int shift) {
+    int size = arr->size;
+    for (int i = size - 1; i >= shift; i--) {
+        arr->number[i] = arr->number[i - shift];
+    }
+    for (int i = 0; i < shift; i++) {
+        arr->number[i] = 0;
+    }
+}
+
+int comparar_arrays(BigInt_t *arr1, BigInt_t *arr2) {
+    int size = arr1->size;
+    for (int i = size - 1; i >= 0; i--) {
+        if (arr1->number[i] > arr2->number[i]) return 1;
+        if (arr1->number[i] < arr2->number[i]) return -1;
+    }
+    return 0;
+}
+
+// Direct multiplication
+void pow_BigInt_directa(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado) {
+    size_t size = base->size;
+    BigInt_t temp_result = {calloc(size, sizeof(subsize_t)), size};
+    BigInt_t temp_multiply = {calloc(size, sizeof(subsize_t)), size};
+    
+    // Initialize result to 1
+    memset(resultado->number, 0, sizeof(subsize_t) * size);
+    resultado->number[0] = 1;
+    
+    // If the exponent is 0, the result is already 1
+    if (es_cero(exponente)) {
+        return;
+    }
+    
+    // Copy the base to temp_result
+    memcpy(temp_result.number, base->number, sizeof(subsize_t) * size);
+    
+    // Perform the exponentiation
+    for (subsize_t i = 1; i < exponente->number[0]; i++) {
+        mult_arr(resultado, &temp_result, &temp_multiply);
+        memcpy(temp_result.number, temp_multiply.number, sizeof(subsize_t) * size);
+    }
+    
+    // Copy the final result
+    memcpy(resultado->number, temp_result.number, sizeof(subsize_t) * size);
+     free(temp_result.number);
+    free(temp_multiply.number);
+}
+
+// Dynamic exponentiation function (chooses the best approach)
+void pow_BigInt(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado) {
+    subsize_t exponente_val = exponente->number[0];  // We assume that the exponent fits in a single subsize_t
+
+    // Choose the best strategy depending on the size of the exponent
+    if (exponente_val > 10) {
+        printf("Using Fast Exponentiation.\n");
+        pow_BigInt_rapida(base, exponente, resultado);
+    } else {
+        printf("Using Direct Exponentiation.\n");
+        pow_BigInt_directa(base, exponente, resultado);
+    }
+}
