@@ -103,16 +103,16 @@ int main(int argc, char *argv[]) {
     #define SIZE 2
 
     // Section 1: Division Booth Test
-    BigInt_t aaaa = {calloc(SIZE, sizeof(subsize_t)), SIZE};
-    BigInt_t bbbb = {calloc(SIZE, sizeof(subsize_t)), SIZE};
+    BigInt_t number_example1 = {calloc(SIZE, sizeof(subsize_t)), SIZE};
+    BigInt_t number_example2 = {calloc(SIZE, sizeof(subsize_t)), SIZE};
     BigInt_t cociente_booth = {calloc(SIZE, sizeof(subsize_t)), SIZE};
     BigInt_t residuo_booth = {calloc(SIZE, sizeof(subsize_t)), SIZE};
 
-    aaaa.number[0] = 1;
-    bbbb.number[0] = 3;
+    number_example1.number[0] = 1;
+    number_example2.number[0] = 3;
 
     // Call the division function
-    div_booth(&aaaa, &bbbb, &cociente_booth, &residuo_booth);
+    div_booth(&number_example1, &number_example2, &cociente_booth, &residuo_booth);
 
     // Print the quotient and remainder in hexadecimal
     printf("Cociente: 0x");
@@ -125,15 +125,15 @@ int main(int argc, char *argv[]) {
 
     // Section 2: Float Grande Division Test
     float_grande resultado_div;
-    BigInt_t aaaa_float = {calloc(SIZE, sizeof(subsize_t)), SIZE};
-    BigInt_t bbbb_float = {calloc(SIZE, sizeof(subsize_t)), SIZE};
-    aaaa_float.number[0] = 1;
-    bbbb_float.number[0] = 3;
+    BigInt_t number_example1_float = {calloc(SIZE, sizeof(subsize_t)), SIZE};
+    BigInt_t number_example2_float = {calloc(SIZE, sizeof(subsize_t)), SIZE};
+    number_example1_float.number[0] = 1;
+    number_example2_float.number[0] = 3;
     resultado_div.number_float.number = calloc(SIZE, sizeof(subsize_t));
     resultado_div.number_float.size = SIZE;
 
 
-    division_float_grande(&aaaa_float, &bbbb_float, &resultado_div, SIZE);
+    division_float_grande(&number_example1_float, &number_example2_float, &resultado_div, SIZE);
     printf("imprimir_float_grande: ");
     imprimir_float_grande(&resultado_div);
     printf("\n");
@@ -154,10 +154,6 @@ int main(int argc, char *argv[]) {
 
 
 
-    
-
-
-
     // Free allocated memory
     free(BigInt8096_1.number);
     free(BigInt8096_2.number);
@@ -166,9 +162,12 @@ int main(int argc, char *argv[]) {
     free(BigInt320_2.number);
     free(resultadoBigInt320.number);
     free(base2.number);
+    free(base.number);
+    free(exponente.number);
     free(exponente2.number);
     free(m2.number);
     free(resultado2.number);
+    free(resultado1.number);
 
     puts("\nPrograma finalizado.\n");
     return 0;
