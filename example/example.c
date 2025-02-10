@@ -133,9 +133,9 @@ int main(int argc, char *argv[]) {
     resultado_div.number_float.size = SIZE;
 
 
-    division_float_grande(&number_example1_float, &number_example2_float, &resultado_div, SIZE);
-    printf("imprimir_float_grande: ");
-    imprimir_float_grande(&resultado_div);
+    div_to_float_big(&number_example1_float, &number_example2_float, &resultado_div, SIZE);
+    printf("float__dump_BigInt: ");
+    float__dump_BigInt(&resultado_div);
     printf("\n");
 
     // Section 3: Exponentiation Test

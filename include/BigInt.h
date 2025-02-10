@@ -113,10 +113,9 @@ void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado);
 
 uint64_t add_with_overflow(subsize_t a, subsize_t b, subsize_t* resultado);
 
-void imprimir_float_grande(float_grande* num);
+void float__dump_BigInt(float_grande* num);
 void normalizar_float_grande(float_grande* num);
-void multiplicar_por_10(BigInt_t* big_int);
-void dividir_por_10(BigInt_t* big_int);
-void suma_sin_suma(BigInt_t* a, BigInt_t* b, BigInt_t* resultado);
-void division_float_grande(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES);
+void mult_x10(BigInt_t* big_int);
+void div_x10(BigInt_t* big_int);
+void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES);
 #endif

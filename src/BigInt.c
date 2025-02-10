@@ -544,7 +544,7 @@ void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado) {
     free(temp_result);
 }
 
-void imprimir_float_grande(float_grande* num) {
+void float__dump_BigInt(float_grande* num) {
     if (num->signo) printf("-");
 
     size_t SIZE = num->number_float.size; // Get the size from the BigInt_t
@@ -608,7 +608,7 @@ void imprimir_float_grande(float_grande* num) {
 }
 
 
-void division_float_grande(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES) {
+void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES) {
     /*
         1.000000003259629
         0xFFFFFFFF / 0xFFFFFFF1 = 1
@@ -679,12 +679,12 @@ void division_float_grande(BigInt_t* a, BigInt_t* b, float_grande* resultado, co
         while (!es_cero(&residuo) && iteraciones < MAX_ITERACIONES) {
             iteraciones++;
 
-            multiplicar_por_10(&residuo);
+            mult_x10(&residuo);
 
             div_booth(&residuo, b, &cociente_temp, &residuo_temp);
 
-            multiplicar_por_10(&(resultado->number_float));
-            suma_sin_suma(&(resultado->number_float), &cociente_temp, &(resultado->number_float));
+            mult_x10(&(resultado->number_float));
+            add_BigInt(&(resultado->number_float), &cociente_temp, &(resultado->number_float));
 
             memcpy(residuo.number, residuo_temp.number, sizeof(subsize_t) * a->size);
             resultado->exponente--;
@@ -752,7 +752,7 @@ void normalizar_float_grande(float_grande* num) {
 
 
 // Multiplica la representación entera (mantisa) por 10.
-void multiplicar_por_10(BigInt_t* big_int) {
+void mult_x10(BigInt_t* big_int) {
     size_t size = big_int->size;
     subsize_t* num = big_int->number;
     size_t carry = 0;
@@ -769,7 +769,7 @@ void multiplicar_por_10(BigInt_t* big_int) {
 
 
 // Divide la representación entera (mantisa) entre 10.
-void dividir_por_10(BigInt_t* big_int) {
+void div_x10(BigInt_t* big_int) {
     size_t size = big_int->size;
     subsize_t* num = big_int->number;
     size_t remainder = 0;
@@ -777,19 +777,6 @@ void dividir_por_10(BigInt_t* big_int) {
         size_t cur = remainder * 1000000000ULL + num[i];
         num[i] = (subsize_t)(cur / 10);
         remainder = cur % 10;
-    }
-}
-
-void suma_sin_suma(BigInt_t* a, BigInt_t* b, BigInt_t* resultado) {
-    size_t size = a->size;
-    subsize_t* num_a = a->number;
-    subsize_t* num_b = b->number;
-    subsize_t* num_resultado = resultado->number;
-    size_t carry = 0;
-    for (size_t i = 0; i < size; i++) {
-        unsigned long long sum = (unsigned long long)num_a[i] + num_b[i] + carry;
-        num_resultado[i] = (subsize_t)(sum & 0xFFFFFFFF);
-        carry = sum >> 32;
     }
 }
 
