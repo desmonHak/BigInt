@@ -1,6 +1,14 @@
 #include "BigInt.h"
 
+
 uint64_t add_with_overflow(subsize_t a, subsize_t b, subsize_t* resultado) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(uint64_t, add_with_overflow)
+            TYPE_DATA_DBG(subsize_t, "a = %p")
+            TYPE_DATA_DBG(subsize_t, "b = %p")
+            TYPE_DATA_DBG(subsize_t*, "resultado = %p")
+        END_TYPE_FUNC_DBG,
+        a, b, resultado);
     subsize_t carry;
     
     while (b != 0) {
@@ -369,7 +377,7 @@ void modpow_BigInt(
     BigInt_t cociente_bigint = {calloc(base->size, sizeof(subsize_t)), base->size};
     subsize_t *cociente = cociente_bigint.number;  // Para almacenar el cociente (que no usaremos)
 
-    while (!es_cero(&(BigInt_t){exponente_temp, base->size})) {
+    while (!is_zero(&(BigInt_t){exponente_temp, base->size})) {
         // Si el exponente es impar, multiplicamos el resultado por la base
         if (exponente_temp[0] & 1) {
             mult_arr(&(BigInt_t){temp_result, base->size}, &(BigInt_t){base_temp, base->size}, &(BigInt_t){temp_result, base->size});
@@ -382,7 +390,7 @@ void modpow_BigInt(
         div_booth(&(BigInt_t){base_temp, base->size}, modulo,  &(BigInt_t){cociente, base->size}, &(BigInt_t){base_temp, base->size});  // Aplicamos el módulo
 
         // Dividimos el exponente entre 2 (desplazamiento a la derecha)
-        dividir_por_2(&(BigInt_t){exponente_temp, base->size});
+        div_x2(&(BigInt_t){exponente_temp, base->size});
     }
 
     // Al final, el resultado está en temp_result
@@ -470,9 +478,9 @@ void div_booth(
 }
 
 // Función para verificar si un número es cero
-bool es_cero(const BigInt_t* big_int) {
+bool is_zero(const BigInt_t* big_int) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
-        INIT_TYPE_FUNC_DBG(void, es_cero)
+        INIT_TYPE_FUNC_DBG(void, is_zero)
         TYPE_DATA_DBG(BigInt_t*, "big_int = %p")
     END_TYPE_FUNC_DBG,
     big_int);
@@ -488,9 +496,9 @@ bool es_cero(const BigInt_t* big_int) {
 }
 
 // División por 2 del número representado como arreglo de enteros
-void dividir_por_2(BigInt_t* big_int) {
+void div_x2(BigInt_t* big_int) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
-        INIT_TYPE_FUNC_DBG(void, dividir_por_2)
+        INIT_TYPE_FUNC_DBG(void, div_x2)
         TYPE_DATA_DBG(BigInt_t*, "big_int = %p")
     END_TYPE_FUNC_DBG,
     big_int);
@@ -510,7 +518,7 @@ void dividir_por_2(BigInt_t* big_int) {
 
 // Función para multiplicar dos arreglos (multiplicación de enteros grandes)
 void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado) {
-     DEBUG_PRINT(DEBUG_LEVEL_INFO,
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
         INIT_TYPE_FUNC_DBG(void, mult_arr)
         TYPE_DATA_DBG(BigInt_t*, "a = %p")
         TYPE_DATA_DBG(BigInt_t*, "b = %p")
@@ -545,6 +553,10 @@ void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado) {
 }
 
 void float__dump_BigInt(float_grande* num) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, float__dump_BigInt)
+        END_TYPE_FUNC_DBG,
+        num);
     if (num->signo) printf("-");
 
     size_t SIZE = num->number_float.size; // Get the size from the BigInt_t
@@ -609,6 +621,14 @@ void float__dump_BigInt(float_grande* num) {
 
 
 void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, mult_arr)
+        TYPE_DATA_DBG(BigInt_t*, "a = %p")
+        TYPE_DATA_DBG(BigInt_t*, "b = %p")
+        TYPE_DATA_DBG(float_grande*, "resultado = %p")
+        TYPE_DATA_DBG(BigInt_t*, "MAX_ITERACIONES = %zu")
+    END_TYPE_FUNC_DBG,
+    a, b, resultado, MAX_ITERACIONES);
     /*
         1.000000003259629
         0xFFFFFFFF / 0xFFFFFFF1 = 1
@@ -649,7 +669,7 @@ void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const s
         return;
     }
     // Comprobar si el divisor es cero
-    if (es_cero(b)) {
+    if (is_zero(b)) {
         printf("Error: División por cero\n");
         return;
     }
@@ -674,9 +694,9 @@ void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const s
     BigInt_t residuo_temp = {calloc(a->size, sizeof(subsize_t)), a->size};
 
     // Si el resto no es 0, seguir dividiendo
-    if (!es_cero(&residuo)) {
+    if (!is_zero(&residuo)) {
         int iteraciones = 0;
-        while (!es_cero(&residuo) && iteraciones < MAX_ITERACIONES) {
+        while (!is_zero(&residuo) && iteraciones < MAX_ITERACIONES) {
             iteraciones++;
 
             mult_x10(&residuo);
@@ -699,6 +719,11 @@ void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const s
 
 // Implementación de las nuevas funciones
 void normalizar_float_grande(float_grande* num) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, normalizar_float_grande)
+        TYPE_DATA_DBG(float_grande*, "num = %p")
+    END_TYPE_FUNC_DBG,
+    num);
     size_t SIZE = num->number_float.size;
     // Contar ceros a la izquierda de la mantisa
     int ceros_izquierda = 0;
@@ -795,6 +820,13 @@ void div_x10(BigInt_t* big_int) {
  *  - If the exponent is even, you can decompose it into basex = (base x / 2 ) 2 base x = (base x/2 ) 2.
  */ 
 void pow_BigInt_rapida(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, pow_BigInt_rapida)
+        TYPE_DATA_DBG(BigInt_t*, "base = %p")
+        TYPE_DATA_DBG(BigInt_t*, "exponente = %p")
+        TYPE_DATA_DBG(BigInt_t*, "resultado = %p")
+    END_TYPE_FUNC_DBG,
+    base, exponente, resultado);
     size_t size = base->size;
     BigInt_t temp_result = {calloc(size * 2, sizeof(subsize_t)), size};
     temp_result.number[0] = 1;  // Initialize the result as 1
@@ -805,7 +837,7 @@ void pow_BigInt_rapida(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado)
     BigInt_t exponente_temp = {calloc(size, sizeof(subsize_t)), size};
     memcpy(exponente_temp.number, exponente->number, sizeof(subsize_t) * size);
 
-    while (!es_cero(&exponente_temp)) {
+    while (!is_zero(&exponente_temp)) {
         // If the exponent is odd, multiply the result by the base
         if (exponente_temp.number[0] & 1) {
             mult_arr(&temp_result, &base_temp, &temp_result);
@@ -815,17 +847,23 @@ void pow_BigInt_rapida(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado)
         mult_arr(&base_temp, &base_temp, &base_temp);
 
         // Divide the exponent by 2 (shift to the right)
-        dividir_por_2(&exponente_temp);
+        div_x2(&exponente_temp);
     }
 
     // In the end, the result is in temp_result
     memcpy(resultado->number, temp_result.number, sizeof(subsize_t) * size);
-     free(temp_result.number);
+    free(temp_result.number);
     free(base_temp.number);
     free(exponente_temp.number);
 }
 
-void desplazar_izquierda(BigInt_t *arr, int shift) {
+void lshift_BigInt(BigInt_t *arr, int shift) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, lshift_BigInt)
+        TYPE_DATA_DBG(BigInt_t*, "arr = %p")
+        TYPE_DATA_DBG(int, "shift = %d")
+    END_TYPE_FUNC_DBG,
+    arr, shift);
     int size = arr->size;
     for (int i = 0; i < size - shift; i++) {
         arr->number[i] = arr->number[i + shift];
@@ -834,7 +872,13 @@ void desplazar_izquierda(BigInt_t *arr, int shift) {
         arr->number[i] = 0;
     }
 }
-void desplazar_derecha(BigInt_t *arr, int shift) {
+void rshift_BigInt(BigInt_t *arr, int shift) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, rshift_BigInt)
+        TYPE_DATA_DBG(BigInt_t*, "arr = %p")
+        TYPE_DATA_DBG(int, "shift = %d")
+    END_TYPE_FUNC_DBG,
+    arr, shift);
     int size = arr->size;
     for (int i = size - 1; i >= shift; i--) {
         arr->number[i] = arr->number[i - shift];
@@ -844,7 +888,25 @@ void desplazar_derecha(BigInt_t *arr, int shift) {
     }
 }
 
-int comparar_arrays(BigInt_t *arr1, BigInt_t *arr2) {
+/*
+ * Comparación de dígitos: Se recorre el arreglo de dígitos desde el último 
+ * hasta el primero (de derecha a izquierda). En cada iteración, se comparan 
+ * los dígitos correspondientes de arr1 y arr2:
+ * 
+ * Si el dígito de arr1 es mayor que el de arr2, la función retorna 1, 
+ * indicando que arr1 es mayor que arr2.
+ * Si el dígito de arr1 es menor que el de arr2, la función retorna -1, 
+ * indicando que arr1 es menor que arr2.
+ * Igualdad: Si todos los dígitos son iguales, la función retorna 0, 
+ * indicando que arr1 y arr2 son iguales.
+ */
+int cmp_BigInt(BigInt_t *arr1, BigInt_t *arr2) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, cmp_BigInt)
+        TYPE_DATA_DBG(BigInt_t*, "arr1 = %p")
+        TYPE_DATA_DBG(BigInt_t*, "arr2 = %p")
+    END_TYPE_FUNC_DBG,
+    arr1, arr2);
     int size = arr1->size;
     for (int i = size - 1; i >= 0; i--) {
         if (arr1->number[i] > arr2->number[i]) return 1;
@@ -855,6 +917,13 @@ int comparar_arrays(BigInt_t *arr1, BigInt_t *arr2) {
 
 // Direct multiplication
 void pow_BigInt_directa(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, pow_BigInt_rapida)
+        TYPE_DATA_DBG(BigInt_t*, "base = %p")
+        TYPE_DATA_DBG(BigInt_t*, "exponente = %p")
+        TYPE_DATA_DBG(BigInt_t*, "resultado = %p")
+    END_TYPE_FUNC_DBG,
+    base, exponente, resultado);
     size_t size = base->size;
     BigInt_t temp_result = {calloc(size, sizeof(subsize_t)), size};
     BigInt_t temp_multiply = {calloc(size, sizeof(subsize_t)), size};
@@ -864,7 +933,7 @@ void pow_BigInt_directa(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado
     resultado->number[0] = 1;
     
     // If the exponent is 0, the result is already 1
-    if (es_cero(exponente)) {
+    if (is_zero(exponente)) {
         return;
     }
     
@@ -885,6 +954,13 @@ void pow_BigInt_directa(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado
 
 // Dynamic exponentiation function (chooses the best approach)
 void pow_BigInt(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado) {
+    DEBUG_PRINT(DEBUG_LEVEL_INFO,
+        INIT_TYPE_FUNC_DBG(void, pow_BigInt_rapida)
+        TYPE_DATA_DBG(BigInt_t*, "base = %p")
+        TYPE_DATA_DBG(BigInt_t*, "exponente = %p")
+        TYPE_DATA_DBG(BigInt_t*, "resultado = %p")
+    END_TYPE_FUNC_DBG,
+    base, exponente, resultado);
     subsize_t exponente_val = exponente->number[0];  // We assume that the exponent fits in a single subsize_t
 
     // Choose the best strategy depending on the size of the exponent

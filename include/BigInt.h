@@ -86,36 +86,36 @@ typedef struct {
 } float_grande;
 
 void of_string_to_numbre(const char* num_str, BigInt_t* big_int);
+size_t count_hex_digit_BigInt(const BigInt_t* big_int);
 
+// funciones de impresion:
 void hex_dump_BigInt(const BigInt_t* big_int);
 void decimal_dump_BigInt(const BigInt_t* big_int);
+void float__dump_BigInt(float_grande* num);
 
-size_t count_hex_digit_BigInt(const BigInt_t* big_int);
+// operaciones aritmeticas o mandejo de numeros:
+void lshift_BigInt(BigInt_t *arr, int shift);
+void rshift_BigInt(BigInt_t *arr, int shift);
+int cmp_BigInt(BigInt_t *arr1, BigInt_t *arr2);
 void add_BigInt(const BigInt_t* a, const BigInt_t* b, BigInt_t* resultado);
 void sub_BigInt(const BigInt_t* a, const BigInt_t* b, BigInt_t* resultado);
+void pow_BigInt_rapida(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
+void pow_BigInt_directa(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
 void pow_BigInt(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
+void div_booth(BigInt_t* dividend, BigInt_t* divisor, BigInt_t* cociente, BigInt_t* residuo);
+void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES);
 void modpow_BigInt(
     const BigInt_t* base, const BigInt_t* exponente, 
     const BigInt_t* modulo, BigInt_t* resultado
 );
-
 void complemento_a_dos(BigInt_t* big_int);
-bool es_cero(const BigInt_t* big_int);
-
-void div_booth(
-    BigInt_t* dividend, 
-    BigInt_t* divisor, 
-    BigInt_t* cociente, 
-    BigInt_t* residuo
-);
-
 void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado);
-
 uint64_t add_with_overflow(subsize_t a, subsize_t b, subsize_t* resultado);
-
-void float__dump_BigInt(float_grande* num);
 void normalizar_float_grande(float_grande* num);
 void mult_x10(BigInt_t* big_int);
 void div_x10(BigInt_t* big_int);
-void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES);
+void div_x2(BigInt_t* big_int);
+
+// funciones de comparacion y condicionales
+bool is_zero(const BigInt_t* big_int);
 #endif
