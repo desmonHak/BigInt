@@ -103,7 +103,7 @@ void pow_BigInt_rapida(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado)
 void pow_BigInt_directa(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
 void pow_BigInt(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
 void div_booth(BigInt_t* dividend, BigInt_t* divisor, BigInt_t* cociente, BigInt_t* residuo);
-void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES);
+void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, size_t* num_digits);
 void modpow_BigInt(
     const BigInt_t* base, const BigInt_t* exponente, 
     const BigInt_t* modulo, BigInt_t* resultado

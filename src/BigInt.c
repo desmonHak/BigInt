@@ -35,21 +35,21 @@ void of_string_to_numbre(const char* num_str, BigInt_t* big_int) {
         END_TYPE_FUNC_DBG,
         num_str, big_int);
     if (big_int == NULL) {
-        printf_color("Error: BigInt_t is NULL.\n");
+        printf("Error: BigInt_t is NULL.\n");
         return;
     }
     if (big_int->number == NULL) {
-        printf_color("Error: Array de salida es NULL.\n");
+        printf("Error: Array de salida es NULL.\n");
         return;
     }
 
     if (num_str == NULL) {
-        printf_color("Error: Cadena de entrada es NULL.\n");
+        printf("Error: Cadena de entrada es NULL.\n");
         return;
     }
 
     if (big_int->size == 0) {
-        printf_color("Error: Tamaño del arreglo de salida es 0.\n");
+        printf("Error: Tamaño del arreglo de salida es 0.\n");
         return;
     }
     size_t len = strlen(num_str);
@@ -119,7 +119,7 @@ void hex_dump_BigInt(const BigInt_t* big_int) {
         END_TYPE_FUNC_DBG,
         big_int);
     for (int i = big_int->size - 1; i >= 0; i--) {
-        printf_color("%08X", big_int->number[i]);
+        printf("%08X", big_int->number[i]);
     }
 }
 void decimal_dump_BigInt(const BigInt_t* big_int) {
@@ -129,11 +129,11 @@ void decimal_dump_BigInt(const BigInt_t* big_int) {
     END_TYPE_FUNC_DBG,
     big_int);
     if (big_int == NULL) {
-        printf_color("Error: big_int es NULL.\n");
+        printf("Error: big_int es NULL.\n");
         return;
     }
     if (big_int->number == NULL) {
-        printf_color("Error: Array de entrada es NULL.\n");
+        printf("Error: Array de entrada es NULL.\n");
         return;
     }
 
@@ -215,11 +215,11 @@ size_t count_hex_digit_BigInt(const BigInt_t* big_int) {
     END_TYPE_FUNC_DBG,
     big_int);
     if (big_int->size == 0) {
-        printf_color("Error: Tamaño del arreglo es 0.\n");
+        printf("Error: Tamaño del arreglo es 0.\n");
         return 0;
     }
     if (big_int->number == NULL) {
-        printf_color("Error: num == NULL.\n");
+        printf("Error: num == NULL.\n");
         return 0;
     }
     size_t longitud = 0;
@@ -259,12 +259,12 @@ void add_BigInt(const BigInt_t* a, const BigInt_t* b, BigInt_t* resultado) {
     a, b, resultado);
 
     if (a == NULL || a->number == NULL || b == NULL || b->number == NULL || resultado == NULL || resultado->number == NULL) {
-        printf_color("Error: One or more BigInt_t pointers are NULL.\n");
+        printf("Error: One or more BigInt_t pointers are NULL.\n");
         return;
     }
 
     if (a->size != b->size || a->size != resultado->size) {
-        printf_color("Error: BigInt_t sizes are not equal.\n");
+        printf("Error: BigInt_t sizes are not equal.\n");
         return;
     }
     uint64_t  carry = 0;
@@ -296,12 +296,12 @@ void sub_BigInt(const BigInt_t* a, const BigInt_t* b, BigInt_t* resultado) {
     a, b, resultado);
 
     if (a == NULL || a->number == NULL || b == NULL || b->number == NULL || resultado == NULL || resultado->number == NULL) {
-        printf_color("Error: One or more BigInt_t pointers are NULL.\n");
+        printf("Error: One or more BigInt_t pointers are NULL.\n");
         return;
     }
 
     if (a->size != b->size || a->size != resultado->size) {
-        printf_color("Error: BigInt_t sizes are not equal.\n");
+        printf("Error: BigInt_t sizes are not equal.\n");
         return;
     }
     subsize_t *b_complemento = calloc(b->size, sizeof(subsize_t));
@@ -320,7 +320,7 @@ void complemento_a_dos(BigInt_t* big_int) {
     big_int);
 
     if (big_int == NULL || big_int->number == NULL) {
-        printf_color("Error: BigInt_t pointer is NULL.\n");
+        printf("Error: BigInt_t pointer is NULL.\n");
         return;
     }
     for (int i = 0; i < big_int->size; i++) {
@@ -351,12 +351,12 @@ void modpow_BigInt(
     base, exponente, modulo, resultado);
 
     if (!base || !base->number || !exponente || !exponente->number || !modulo || !modulo->number || !resultado || !resultado->number) {
-        printf_color("Error: One or more BigInt_t pointers are NULL.\n");
+        printf("Error: One or more BigInt_t pointers are NULL.\n");
         return;
     }
 
     if (base->size != modulo->size || base->size != resultado->size || base->size != exponente->size) {
-        printf_color("Error: BigInt_t sizes are not equal.\n");
+        printf("Error: BigInt_t sizes are not equal.\n");
         return;
     }
     // https://es.wikipedia.org/wiki/Exponenciación_modular
@@ -417,12 +417,12 @@ void div_booth(
     dividend, divisor, cociente, residuo);
 
         if (!dividend || !dividend->number || !divisor || !divisor->number || !cociente || !cociente->number || !residuo || !residuo->number) {
-        printf_color("Error: One or more BigInt_t pointers are NULL.\n");
+        printf("Error: One or more BigInt_t pointers are NULL.\n");
         return;
     }
 
     if (dividend->size != divisor->size || dividend->size != cociente->size || dividend->size != residuo->size) {
-        printf_color("Error: BigInt_t sizes are not equal.\n");
+        printf("Error: BigInt_t sizes are not equal.\n");
         return;
     }
     BigInt_t Q_bigint = {calloc(dividend->size, sizeof(subsize_t)), dividend->size};       // Cociente (inicializado con el dividendo)
@@ -486,7 +486,7 @@ bool is_zero(const BigInt_t* big_int) {
     big_int);
 
     if (big_int == NULL || big_int->number == NULL) {
-        printf_color("Error: BigInt_t pointer is NULL.\n");
+        printf("Error: BigInt_t pointer is NULL.\n");
         return true;
     }
     for (int i = 0; i < big_int->size; i++) {
@@ -504,7 +504,7 @@ void div_x2(BigInt_t* big_int) {
     big_int);
 
     if (big_int == NULL || big_int->number == NULL) {
-        printf_color("Error: BigInt_t pointer is NULL.\n");
+        printf("Error: BigInt_t pointer is NULL.\n");
         return;
     }
     unsigned long long carry = 0;
@@ -527,12 +527,12 @@ void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado) {
     a, b, resultado);
 
     if (!a || !a->number || !b || !b->number || !resultado || !resultado->number) {
-        printf_color("Error: One or more BigInt_t pointers are NULL.\n");
+        printf("Error: One or more BigInt_t pointers are NULL.\n");
         return;
     }
 
      if (a->size != b->size || a->size != resultado->size) {
-        printf_color("Error: BigInt_t sizes are not equal.\n");
+        printf("Error: BigInt_t sizes are not equal.\n");
         return;
     }
 
@@ -620,54 +620,21 @@ void float__dump_BigInt(float_grande* num) {
 }
 
 
-void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const size_t MAX_ITERACIONES) {
+void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, size_t* num_digits) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
         INIT_TYPE_FUNC_DBG(void, mult_arr)
         TYPE_DATA_DBG(BigInt_t*, "a = %p")
         TYPE_DATA_DBG(BigInt_t*, "b = %p")
         TYPE_DATA_DBG(float_grande*, "resultado = %p")
-        TYPE_DATA_DBG(BigInt_t*, "MAX_ITERACIONES = %zu")
+        TYPE_DATA_DBG(size_t*, "num_digits = %zu")
     END_TYPE_FUNC_DBG,
-    a, b, resultado, MAX_ITERACIONES);
-    /*
-        1.000000003259629
-        0xFFFFFFFF / 0xFFFFFFF1 = 1
-        0xFFFFFFFF % 0xFFFFFFF1 = 0xe
-        4294967295 % 4294967281 = 14
-        14 % 4294967281 = 0
+    a, b, resultado, *num_digits);
 
-        140 % 4294967281 = 0
-        0x8c
-
-        1400 % 4294967281 = 0
-        0x578
-
-        14000 % 4294967281 = 0
-        0x36b0
-
-        140000 % 4294967281 = 0
-        0x222e0
-
-        1400000 % 4294967281 = 0
-        0x155cc0
-
-        14000000 % 4294967281 = 0
-        0xd59f80
-
-        140000000 % 4294967281 = 0
-        0x8583b00
-
-        1400000000 % 4294967281 = 0
-        0x53724e00
-
-        14000000000 / 4294967281 = 3
-        14000000000 % 4294967281 = 1115098157
-        0x342770c00
-     */
     if (!a || !a->number || !b || !b->number || a->size != b->size) {
-        printf_color("Error: Division por cero o argumentos invalidos.\n");
+        printf("Error: Division por cero o argumentos invalidos.\n");
         return;
     }
+
     // Comprobar si el divisor es cero
     if (is_zero(b)) {
         printf("Error: División por cero\n");
@@ -678,44 +645,37 @@ void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, const s
     BigInt_t cociente = {calloc(a->size, sizeof(subsize_t)), a->size};
     BigInt_t residuo = {calloc(a->size, sizeof(subsize_t)), a->size};
 
-
     // Llamamos a la función de división
     div_booth(a, b, &cociente, &residuo);
 
     memset(resultado, 0, sizeof(float_grande));
     resultado->number_float = cociente;
-    //memcpy(&(resultado->number_float), &cociente, sizeof(BigInt_t)); // copiar el cociente al resultado
-    //resultado->signo = !(a->signo ^ b->signo);  // establecer el signo del resultado
-    /* -- = +; ++ = +; + - = -; - + = - */
-    //int cotiente_len = contar_digitos(&cociente, SIZE) *-1;
-    //resultado->exponente = contar_digitos(&cociente, SIZE);  // Calcular la longitud de la mantisa
 
     BigInt_t cociente_temp = {calloc(a->size, sizeof(subsize_t)), a->size};
     BigInt_t residuo_temp = {calloc(a->size, sizeof(subsize_t)), a->size};
+    size_t digits_obtained = 0;
+    size_t number_max_digits = *num_digits;
 
     // Si el resto no es 0, seguir dividiendo
-    if (!is_zero(&residuo)) {
-        int iteraciones = 0;
-        while (!is_zero(&residuo) && iteraciones < MAX_ITERACIONES) {
-            iteraciones++;
-
+    if (!is_zero(&residuo) ) {
+        while (!is_zero(&residuo) && digits_obtained < number_max_digits) {
+            digits_obtained++;
             mult_x10(&residuo);
-
             div_booth(&residuo, b, &cociente_temp, &residuo_temp);
-
             mult_x10(&(resultado->number_float));
             add_BigInt(&(resultado->number_float), &cociente_temp, &(resultado->number_float));
-
             memcpy(residuo.number, residuo_temp.number, sizeof(subsize_t) * a->size);
             resultado->exponente--;
         }
         // Normalizar el resultado
         normalizar_float_grande(resultado);
     }
+    *num_digits = digits_obtained;
     free(residuo_temp.number);
     free(cociente_temp.number);
     free(residuo.number);
 }
+
 
 // Implementación de las nuevas funciones
 void normalizar_float_grande(float_grande* num) {

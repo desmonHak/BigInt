@@ -11,20 +11,18 @@ all: generate_lib
 
 examples: generate_lib
 	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) $(PATH_EXAMPLES)/example.c $(LINKER_FLAGS) -o example.$(EXTENSION)
+	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) $(PATH_EXAMPLES)/example1.c $(LINKER_FLAGS) -o example1.$(EXTENSION)
 examples_debug: generate_lib_debug
 	$(CC) $(CFLAGS_DEBUG) $(INCLUDE_FLAGS) $(PATH_EXAMPLES)/example.c $(LINKER_FLAGS) -o example.$(EXTENSION)
+	$(CC) $(CFLAGS_DEBUG) $(INCLUDE_FLAGS) $(PATH_EXAMPLES)/example1.c $(LINKER_FLAGS) -o example1.$(EXTENSION)
 
-debug: generate_lib_debug examples_debug
+debug: examples_debug
 	ar -t $(TARGET).a
 
 libdebug_c.a:
 	echo "generando librerias estatica... $@"
 	$(MAKE) -C ./$(PATH_DEBUG) -f $(MAKE_NAME)
 
-$(TARGET_DEBUG).a: $(OBJECTS)
-	echo "generando librerias estatica... $@"
-	$(ARR) $(ARR_FLAGS) $@ $^
-	ranlib $@
 
 $(TARGET).a: $(OBJECTS)
 	$(ARR) $(ARR_FLAGS) $@ $^
@@ -38,6 +36,12 @@ BigInt.o: $(PATH_SRC)/BigInt.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 BigInt_debug.o: $(PATH_SRC)/BigInt.c
+	$(CC) $(CFLAGS_DEBUG) -c $^ -o $@
+
+Fractions.o: $(PATH_SRC)/Fractions.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+Fractions_debug.o: $(PATH_SRC)/Fractions.c
 	$(CC) $(CFLAGS_DEBUG) -c $^ -o $@
 
 cleanobj:

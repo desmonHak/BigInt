@@ -32,12 +32,12 @@ CFLAGS 		  =  $(GLOBAL_CFLAGS) -O3 -Wno-unused-parameter \
 				-Wno-implicit-fallthrough -Wno-type-limits  \
 				-Wno-unused-variable -Wno-pointer-sign
 
-CFLAGS_DEBUG  =  $(GLOBAL_CFLAGS) -ggdb -fno-asynchronous-unwind-tables  	      \
-				-Wall -Wextra 		 -pipe -O0 -D DEBUG_ENABLE      	          \
-				-fstack-protector-strong -Wpedantic -fno-omit-frame-pointer       \
+CFLAGS_DEBUG  =  $(GLOBAL_CFLAGS) -ggdb -fno-asynchronous-unwind-tables  	      	\
+				-Wall -Wextra -pipe -O0 -D DEBUG_ENABLE -fno-stack-protector  		\
+				-fstack-protector-strong -Wpedantic -fno-omit-frame-pointer       	\
 				-fno-inline -fno-optimize-sibling-calls -fdiagnostics-show-option -fPIC
 
 ARR_FLAGS     = -rc
 
-OBJECTS = 	BigInt.o
-OBJECTS_DEBUG = BigInt_debug.o
+OBJECTS = 	BigInt.o Fractions.o
+OBJECTS_DEBUG = BigInt_debug.o Fractions_debug.o
