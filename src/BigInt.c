@@ -112,6 +112,10 @@ void of_string_to_numbre(const char* num_str, BigInt_t* big_int) {
     }
 }
 
+/**
+ *
+ * @param big_int Numero BigInt a imprimir en formato hexadecimal
+ */
 void hex_dump_BigInt(const BigInt_t* big_int) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
         INIT_TYPE_FUNC_DBG(void, hex_dump_BigInt)
@@ -122,6 +126,11 @@ void hex_dump_BigInt(const BigInt_t* big_int) {
         printf("%08X", big_int->number[i]);
     }
 }
+
+/**
+ *
+ * @param big_int Numero BigInt a imprimir en formato decimal
+ */
 void decimal_dump_BigInt(const BigInt_t* big_int) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
         INIT_TYPE_FUNC_DBG(void, decimal_dump_BigInt)
@@ -169,7 +178,7 @@ void decimal_dump_BigInt(const BigInt_t* big_int) {
      * 
      */
     int longitud_valor_decimal = len_decimal(count_hex_digit_BigInt(big_int)); // 0.82 * longitud del número hex = aprox longitud num decimal
-    char *decimal = malloc(longitud_valor_decimal + 1);
+    char *decimal = calloc(longitud_valor_decimal + 1, sizeof(char));
     memset(decimal, '0', longitud_valor_decimal);
     decimal[longitud_valor_decimal] = '\0';
     char *temp = calloc(longitud_valor_decimal + 1, sizeof(char));
@@ -370,7 +379,7 @@ void modpow_BigInt(
     subsize_t *base_temp = base_temp_bigint.number;
     memcpy(base_temp, base->number, sizeof(subsize_t) * base->size);
 
-    BigInt_t exponente_temp_bigint = {malloc(base->size * sizeof(subsize_t)), base->size};
+    BigInt_t exponente_temp_bigint = {calloc(base->size, sizeof(subsize_t)), base->size};
     subsize_t *exponente_temp = exponente_temp_bigint.number;
     memcpy(exponente_temp, exponente->number, sizeof(subsize_t) * base->size);
 
@@ -561,7 +570,7 @@ void float__dump_BigInt(float_grande* num) {
 
     size_t SIZE = num->number_float.size; // Get the size from the BigInt_t
     int longitud_valor_decimal = len_decimal(count_hex_digit_BigInt(&(num->number_float))); // Pass the BigInt_t
-    char *decimal = malloc(longitud_valor_decimal + 1);
+    char *decimal = calloc(longitud_valor_decimal + 1, sizeof(char));
     memset(decimal, '0', longitud_valor_decimal);
     decimal[longitud_valor_decimal] = '\0';
 

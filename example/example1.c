@@ -32,46 +32,48 @@ int main() {
 
     // 5. Imprimir resultados usando formato hexadecimal
     printf("Fraction 1: ");
-    hex_dump_BigInt(&(frac1.numerator));
+    decimal_dump_BigInt(&(frac1.numerator));
     printf(" / ");
-    hex_dump_BigInt(&(frac1.denominator));
+    decimal_dump_BigInt(&(frac1.denominator));
     printf("\n");
 
     printf("Fraction 2: ");
-    hex_dump_BigInt(&(frac2.numerator));
+    decimal_dump_BigInt(&(frac2.numerator));
     printf(" / ");
-    hex_dump_BigInt(&(frac2.denominator));
+    decimal_dump_BigInt(&(frac2.denominator));
     printf("\n");
 
     printf("Sum: ");
-    hex_dump_BigInt(&(sum_frac.numerator));
+    decimal_dump_BigInt(&(sum_frac.numerator));
     printf(" / ");
-    hex_dump_BigInt(&(sum_frac.denominator));
+    decimal_dump_BigInt(&(sum_frac.denominator));
     printf("\n");
 
     printf("Subtraction: ");
-    hex_dump_BigInt(&(sub_frac.numerator));
+    decimal_dump_BigInt(&(sub_frac.numerator));
     printf(" / ");
-    hex_dump_BigInt(&(sub_frac.denominator));
+    decimal_dump_BigInt(&(sub_frac.denominator));
     printf("\n");
 
     printf("Multiplication: ");
-    hex_dump_BigInt(&(mul_frac.numerator));
+    decimal_dump_BigInt(&(mul_frac.numerator));
     printf(" / ");
-    hex_dump_BigInt(&(mul_frac.denominator));
+    decimal_dump_BigInt(&(mul_frac.denominator));
     printf("\n");
 
     printf("Division: ");
-    hex_dump_BigInt(&(div_frac.numerator));
+    decimal_dump_BigInt(&(div_frac.numerator));
     printf(" / ");
-    hex_dump_BigInt(&(div_frac.denominator));
+    decimal_dump_BigInt(&(div_frac.denominator));
+    printf(" = ");
+    print_fraction_decimal(&div_frac, 32);
     printf("\n");
 
     // 6. Convertir la suma a "float grande" y mostrar el resultado
     printf("Sum (as float grande): ");
-    hex_dump_BigInt(&(sum_frac.numerator));
+    decimal_dump_BigInt(&(sum_frac.numerator));
     printf(" / ");
-    hex_dump_BigInt(&(sum_frac.denominator));
+    decimal_dump_BigInt(&(sum_frac.denominator));
     printf(" = ");
     float_grande resultado_div = {
         .number_float = {
@@ -85,6 +87,35 @@ int main() {
     div_to_float_big(&(sum_frac.numerator), &(sum_frac.denominator), &resultado_div, &desired_digits);
     float__dump_BigInt(&resultado_div);
     printf("\n");
+
+
+    // Supón que tenemos un float_grande equivalente a 123.45
+    #define BIG_SIZE 10
+
+    float_grande num;
+    num.number_float.number = calloc(BIG_SIZE, sizeof(subsize_t));
+    num.number_float.size = BIG_SIZE;
+    of_string_to_numbre("12345", &num.number_float); // 123.45 → 12345 (sin punto)
+    num.exponente = -2; // 2 dígitos decimales
+    num.signo = 0; // positivo
+
+    Fraction_t f = BigIntDecimal_to_Fraction_float(&num);
+
+    float__dump_BigInt(&num);
+
+    printf("\n");
+    decimal_dump_BigInt(&(f.numerator));
+    printf(" / ");
+    decimal_dump_BigInt(&(f.denominator));
+    printf("\n");
+
+    printf("resultado: ");
+    print_fraction_decimal(&f,32);
+
+    //  liberar memoria!
+    free(num.number_float.number);
+    free(f.numerator.number);
+    free(f.denominator.number);
 
     // 7. Liberar la memoria asignada para cada fracción
     // NOTA: Como las fracciones poseen los BigInts (ya sean originales o resultantes),

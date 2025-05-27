@@ -91,6 +91,7 @@ int main(int argc, char *argv[]) {
     subsize_t ba = 0x00000001;
     subsize_t resultadoa;
 
+    // detectamos el desbodamiendo en la suma:
     uint64_t resultado_final = add_with_overflow(aa, ba, &resultadoa);
 
     if (resultado_final > 0xFFFFFFFF) {
