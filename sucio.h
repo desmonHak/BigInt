@@ -69,7 +69,7 @@ typedef struct {
     subsize_t mantisa[SIZE];  // Mantisa como un número entero grande
     int exponente;            // Exponente como un entero simple
     int signo;                // 0 para positivo, 1 para negativo
-} float_grande;
+} BigFloat_t;
 
 // Funciones auxiliares (ya proporcionadas)
 size_t longitud_hex(subsize_t* num, size_t size);
@@ -90,11 +90,11 @@ bool es_menor(subsize_t* a, subsize_t* b);
 int es_mayor_o_igual(subsize_t* arr1, subsize_t* arr2, int size);
 void resta_arreglos(subsize_t* a, subsize_t* b, subsize_t* resultado, int size);
 
-// Nuevas funciones para float_grande
-void normalizar_float_grande(float_grande* num);
-void inicializar_float_grande(float_grande* num, const char* valor_str);
-void sumar_float_grande(float_grande* a, float_grande* b, float_grande* resultado);
-void restar_float_grande(float_grande* a, float_grande* b, float_grande* resultado);
-void multiplicar_float_grande(float_grande* a, float_grande* b, float_grande* resultado);
-void dividir_float_grande(float_grande* a, float_grande* b, float_grande* resultado);
-void imprimir_float_grande(float_grande* num);
+// Nuevas funciones para BigFloat_t
+void normalizar_BigFloat(BigFloat_t* num);
+void inicializar_BigFloat(BigFloat_t* num, const char* valor_str);
+void sumar_BigFloat(BigFloat_t* a, BigFloat_t* b, BigFloat_t* resultado);
+void restar_BigFloat(BigFloat_t* a, BigFloat_t* b, BigFloat_t* resultado);
+void multiplicar_BigFloat(BigFloat_t* a, BigFloat_t* b, BigFloat_t* resultado);
+void dividir_BigFloat(BigFloat_t* a, BigFloat_t* b, BigFloat_t* resultado);
+void imprimir_BigFloat(BigFloat_t* num);

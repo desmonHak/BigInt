@@ -546,22 +546,92 @@ void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado) {
     }
 
     size_t size = a->size;
-    subsize_t *temp_result = calloc(2 * size, sizeof(subsize_t));  // Tamaño temporal para el resultado
+    size_t res_size = resultado->size;
+    memset(resultado->number, 0, sizeof(subsize_t) * res_size);
 
     for (size_t i = 0; i < size; i++) {
         unsigned long long carry = 0;
         for (size_t j = 0; j < size; j++) {
-            unsigned long long product = (unsigned long long)a->number[i] * b->number[j] + temp_result[i + j] + carry;
-            temp_result[i + j] = (subsize_t)(product & UINTPTR_MAX_SUBSIZE_T);
+            if (i + j >= res_size) continue; // Evita overflow
+            unsigned long long product = (unsigned long long)a->number[i] * b->number[j] + resultado->number[i + j] + carry;
+            resultado->number[i + j] = (subsize_t)(product & UINTPTR_MAX_SUBSIZE_T);
             carry = product >> LEN_BITS_SUBSIZE_T;
         }
-        temp_result[i + size] = (subsize_t)carry;  // Acarreo final
+        if (i + size < res_size)
+            resultado->number[i + size] = (subsize_t)carry;
     }
-    memcpy(resultado->number, temp_result, size * sizeof(subsize_t));
-    free(temp_result);
+
 }
 
-void float__dump_BigInt(float_grande* num) {
+// Calcula la raíz cuadrada entera de n usando Newton-Raphson.
+void sqrt_BigInt(const BigInt_t* n, BigInt_t* raiz) {
+    size_t size = n->size;
+    // Inicializa x = n / 2 (aproximación inicial)
+    BigInt_t x = {calloc(size, sizeof(subsize_t)), size};
+    BigInt_t x_prev = {calloc(size, sizeof(subsize_t)), size};
+    BigInt_t temp = {calloc(size * 2, sizeof(subsize_t)), size };
+    BigInt_t two = {calloc(size, sizeof(subsize_t)), size};
+
+    // two = 2
+    memset(two.number, 0, sizeof(subsize_t) * size);
+    two.number[0] = 2;
+
+    // x = n / 2
+    memcpy(x.number, n->number, sizeof(subsize_t) * size);
+    div_x2(&x);
+
+    // Si n < 2, la raíz es n
+    if (is_zero(n) || (n->number[0] == 1 && size == 1)) {
+        memcpy(raiz->number, n->number, sizeof(subsize_t) * size);
+        free(x.number); free(x_prev.number); free(temp.number); free(two.number);
+        return;
+    }
+
+    // Bucle de Newton-Raphson
+    while (1) {
+        // x_prev = x
+        memcpy(x_prev.number, x.number, sizeof(subsize_t) * size);
+
+        // temp = n / x
+        memset(temp.number, 0, sizeof(subsize_t) * size * 2);
+        BigInt_t cociente = {calloc(size, sizeof(subsize_t)), size};
+        BigInt_t residuo = {calloc(size, sizeof(subsize_t)), size};
+        div_booth((BigInt_t*)n, &x, &cociente, &residuo);
+
+        // temp = x + (n / x)
+        add_BigInt(&x, &cociente, &temp);
+
+        // x = temp / 2
+        memcpy(x.number, temp.number, sizeof(subsize_t) * size);
+        div_x2(&x);
+
+        free(cociente.number);
+        free(residuo.number);
+
+        // Si x == x_prev (sin cambios), terminamos
+        if (cmp_BigInt(&x, &x_prev) == 0) {
+            break;
+        }
+    }
+
+    // Copia el resultado
+    memcpy(raiz->number, x.number, sizeof(subsize_t) * size);
+
+    free(x.number);
+    free(x_prev.number);
+    free(temp.number);
+    free(two.number);
+}
+
+
+
+void sqrt_BigFloat(const BigFloat_t* n, BigFloat_t* raiz, size_t decimales) {
+#warning "por implementar"
+}
+
+
+
+void float__dump_BigInt(BigFloat_t* num) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
         INIT_TYPE_FUNC_DBG(void, float__dump_BigInt)
         END_TYPE_FUNC_DBG,
@@ -629,12 +699,12 @@ void float__dump_BigInt(float_grande* num) {
 }
 
 
-void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, size_t* num_digits) {
+void div_to_float_big(BigInt_t* a, BigInt_t* b, BigFloat_t* resultado, size_t* num_digits) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
         INIT_TYPE_FUNC_DBG(void, mult_arr)
         TYPE_DATA_DBG(BigInt_t*, "a = %p")
         TYPE_DATA_DBG(BigInt_t*, "b = %p")
-        TYPE_DATA_DBG(float_grande*, "resultado = %p")
+        TYPE_DATA_DBG(BigFloat_t*, "resultado = %p")
         TYPE_DATA_DBG(size_t*, "num_digits = %zu")
     END_TYPE_FUNC_DBG,
     a, b, resultado, *num_digits);
@@ -657,7 +727,7 @@ void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, size_t*
     // Llamamos a la función de división
     div_booth(a, b, &cociente, &residuo);
 
-    memset(resultado, 0, sizeof(float_grande));
+    memset(resultado, 0, sizeof(BigFloat_t));
     resultado->number_float = cociente;
 
     BigInt_t cociente_temp = {calloc(a->size, sizeof(subsize_t)), a->size};
@@ -677,7 +747,7 @@ void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, size_t*
             resultado->exponente--;
         }
         // Normalizar el resultado
-        normalizar_float_grande(resultado);
+        normalizar_BigFloat(resultado);
     }
     *num_digits = digits_obtained;
     free(residuo_temp.number);
@@ -687,10 +757,10 @@ void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, size_t*
 
 
 // Implementación de las nuevas funciones
-void normalizar_float_grande(float_grande* num) {
+void normalizar_BigFloat(BigFloat_t* num) {
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
-        INIT_TYPE_FUNC_DBG(void, normalizar_float_grande)
-        TYPE_DATA_DBG(float_grande*, "num = %p")
+        INIT_TYPE_FUNC_DBG(void, normalizar_BigFloat)
+        TYPE_DATA_DBG(BigFloat_t*, "num = %p")
     END_TYPE_FUNC_DBG,
     num);
     size_t SIZE = num->number_float.size;
@@ -940,4 +1010,24 @@ void pow_BigInt(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado) {
         printf("Using Direct Exponentiation.\n");
         pow_BigInt_directa(base, exponente, resultado);
     }
+}
+
+/**
+ * @brief Libero el entero que contiene este big int, pero no la estructura que 
+ * lo representa, si es que fue creado usando memoria dinamica.
+ * 
+ * @param number espera recibir un puntero a un big int al que liberar su entero
+ * , puede a ver sido reservado usando memoria dinamica o no.
+ */
+void free_BigInt_inside(BigInt_t* number) {
+    if (number == NULL) return;
+    if (number->number == NULL) return;
+    free(number->number);
+    number->number = NULL;
+}
+void free_BigFloat_inside(BigFloat_t* number) {
+    if (number == NULL) return;
+    if (number->number_float.number == NULL) return;
+    free(number->number_float.number);
+    number->number_float.number = NULL;
 }

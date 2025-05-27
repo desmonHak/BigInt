@@ -541,7 +541,7 @@ void string_a_array(const char* num_str, subsize_t* arr, int size) {
     }
 }
 // Implementación de las nuevas funciones
-void normalizar_float_grande(float_grande* num) {
+void normalizar_BigFloat(BigFloat_t* num) {
     // Contar ceros a la izquierda de la mantisa
     int ceros_izquierda = 0;
     while (ceros_izquierda < SIZE && num->mantisa[ceros_izquierda] == 0) {
@@ -601,7 +601,7 @@ bool es_menor(subsize_t* a, subsize_t* b) {
     return false;
 }
 
-void imprimir_float_grande(float_grande* num) {
+void imprimir_BigFloat(BigFloat_t* num) {
     if (num->signo) printf("-");
     
     int longitud_valor_decimal = len_decimal(longitud_hex(num->mantisa, SIZE));
@@ -689,7 +689,7 @@ int contar_digitos(subsize_t* cociente, int size) {
 
 
 #define MAX_ITERACIONES 64
-void division_float_grande(subsize_t* a, subsize_t* b, float_grande* resultado) {
+void division_BigFloat(subsize_t* a, subsize_t* b, BigFloat_t* resultado) {
     /*
         1.000000003259629
         0xFFFFFFFF / 0xFFFFFFF1 = 1
@@ -736,7 +736,7 @@ void division_float_grande(subsize_t* a, subsize_t* b, float_grande* resultado) 
     // Llamamos a la función de división
     division_booth(a, b, cociente, residuo, SIZE);
     
-    memset(resultado, 0, sizeof(float_grande));
+    memset(resultado, 0, sizeof(BigFloat_t));
     memcpy(&(resultado->mantisa), cociente, SIZE); // copiar el cociente al resultado
     //resultado->signo = !(a->signo ^ b->signo);  // establecer el signo del resultado
     /* -- = +; ++ = +; + - = -; - + = - */
@@ -765,13 +765,13 @@ void division_float_grande(subsize_t* a, subsize_t* b, float_grande* resultado) 
             resultado->exponente--;
         }
         // Normalizar el resultado
-        normalizar_float_grande(resultado);
+        normalizar_BigFloat(resultado);
     }
     
 }
 
 
-void generate_randomNumber(subsize_t* a, subsize_t* b, float_grande* resultado) {
+void generate_randomNumber(subsize_t* a, subsize_t* b, BigFloat_t* resultado) {
     if (es_cero(b, SIZE)) {
         printf("Error: División por cero\n");
         return;
@@ -786,7 +786,7 @@ void generate_randomNumber(subsize_t* a, subsize_t* b, float_grande* resultado) 
     imprimir_hex(residuo, SIZE);
     printf("\n");
 
-    memset(resultado, 0, sizeof(float_grande));
+    memset(resultado, 0, sizeof(BigFloat_t));
     memcpy(resultado->mantisa, cociente, SIZE);
     resultado->exponente = 0;
 
@@ -812,7 +812,7 @@ void generate_randomNumber(subsize_t* a, subsize_t* b, float_grande* resultado) 
         printf("\n");
     }
     
-    normalizar_float_grande(resultado);
+    normalizar_BigFloat(resultado);
 }
 
 
@@ -926,10 +926,10 @@ int main() {
     imprimir_hex(residuo, SIZE);
     printf("\n");
 
-    float_grande resultado_div;
-    division_float_grande(aaaa, bbbb, &resultado_div);
-    printf("imprimir_float_grande: ");
-    imprimir_float_grande(&resultado_div);
+    BigFloat_t resultado_div;
+    division_BigFloat(aaaa, bbbb, &resultado_div);
+    printf("imprimir_BigFloat: ");
+    imprimir_BigFloat(&resultado_div);
     printf("\n");
 
 

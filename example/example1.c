@@ -7,6 +7,9 @@
 #define SIZE 5 // Tamaño por defecto si no se define en otro lado
 #endif
 
+
+
+
 int main() {
     // 1. Crear BigInts para numeradores y denominadores
     BigInt_t num1 = { calloc(SIZE, sizeof(subsize_t)), SIZE };
@@ -75,7 +78,7 @@ int main() {
     printf(" / ");
     decimal_dump_BigInt(&(sum_frac.denominator));
     printf(" = ");
-    float_grande resultado_div = {
+    BigFloat_t resultado_div = {
         .number_float = {
             .number = calloc(SIZE, sizeof(subsize_t)),
             .size = SIZE
@@ -89,10 +92,10 @@ int main() {
     printf("\n");
 
 
-    // Supón que tenemos un float_grande equivalente a 123.45
+    // Supón que tenemos un BigFloat_t equivalente a 123.45
     #define BIG_SIZE 10
 
-    float_grande num;
+    BigFloat_t num;
     num.number_float.number = calloc(BIG_SIZE, sizeof(subsize_t));
     num.number_float.size = BIG_SIZE;
     of_string_to_numbre("12345", &num.number_float); // 123.45 → 12345 (sin punto)
@@ -113,9 +116,8 @@ int main() {
     print_fraction_decimal(&f,32);
 
     //  liberar memoria!
-    free(num.number_float.number);
-    free(f.numerator.number);
-    free(f.denominator.number);
+    free_BigFloat_inside(&num);
+    free_Fraction_t_inside(&f);
 
     // 7. Liberar la memoria asignada para cada fracción
     // NOTA: Como las fracciones poseen los BigInts (ya sean originales o resultantes),
@@ -132,7 +134,11 @@ int main() {
     free(mul_frac.denominator.number);
     free(div_frac.numerator.number);
     free(div_frac.denominator.number);
-    free(resultado_div.number_float.number);
+
+    free_BigFloat_inside(&resultado_div);
+
+
+
 
     puts("adios");
     return 0;

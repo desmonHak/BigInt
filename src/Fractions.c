@@ -130,8 +130,9 @@ Fraction_t divide_fractions(const Fraction_t* frac1, const Fraction_t* frac2) {
     max_size = (frac2->denominator.size > max_size) ? frac2->denominator.size : frac2->denominator.size;
 
     // Verificar división por cero: se considera división por cero si el numerador del divisor es 0.
-    if (is_zero(&(frac2->numerator))) {
-        fprintf(stderr, "Error: Division by zero\n");
+    // Checa denominador propio
+    if (is_zero(&frac1->denominator) || is_zero(&frac2->denominator)) {
+        fprintf(stderr, "Error: Division by zero (fraction denominator is zero)\n");
         exit(EXIT_FAILURE);
     }
 
@@ -158,7 +159,7 @@ Fraction_t divide_fractions(const Fraction_t* frac1, const Fraction_t* frac2) {
     return result;
 }
 
-Fraction_t BigIntDecimal_to_Fraction_float(const float_grande* number) {
+Fraction_t BigIntDecimal_to_Fraction_float(const BigFloat_t* number) {
     // 1. Copiar la mantisa (numerador)
     BigInt_t numerator;
     numerator.number = calloc(number->number_float.size, sizeof(subsize_t));
@@ -204,7 +205,7 @@ Fraction_t BigIntDecimal_to_Fraction_float(const float_grande* number) {
 }
 
 void print_fraction_decimal(const Fraction_t* frac, size_t number_decimals) {
-    float_grande resultado_div = {
+    BigFloat_t resultado_div = {
         .number_float = {
             .number = calloc(number_decimals, sizeof(subsize_t)),
             .size = number_decimals
@@ -217,4 +218,86 @@ void print_fraction_decimal(const Fraction_t* frac, size_t number_decimals) {
     float__dump_BigInt(&resultado_div);
     printf("\n");
 }
+
+/**
+ * @brief La funcion elimina los elementos internos del tipo fraccion, es decir
+ * el denominar y numerador son eliminados, mas no se libera la estructura
+ * `Fraction_t*`
+ * 
+ * @param frac_ un puntero a fraccion. 
+ */
+void free_Fraction_t_inside(Fraction_t *frac) {
+    if (frac == NULL) return;
+
+    if (frac->numerator.number != NULL) {
+        free(frac->numerator.number);
+        frac->numerator.number = NULL;
+    }
+
+    if (frac->denominator.number != NULL) {
+        free(frac->denominator.number);
+        frac->denominator.number = NULL;
+    }
+}
+
+
+/**
+ * @brief La funcion libera la estructura completa si `Fraction_t*` fue 
+ * reservada usando memoria dinamica, y libera sus componentes internos.
+ * 
+ * @param frac_ un puntero a puntero a fraccion. 
+ */
+void free_Fraction_t(Fraction_t **frac_) {
+    if (frac_ == NULL || *frac_ == NULL) return;
+
+    free_Fraction_t_inside(*frac_);
+    free(*frac_);
+    *frac_ = NULL;
+}
+
+
+// Calcula n! como BigInt
+void factorial_BigInt(int n, BigInt_t* result, size_t size_big) {
+    of_string_to_numbre("1", result);
+    BigInt_t temp = {calloc(size_big, sizeof(subsize_t)), size_big};
+    for (int i = 2; i <= n; ++i) {
+        char str[32];
+        sprintf(str, "%d", i);
+        of_string_to_numbre(str, &temp);
+        mult_arr(result, &temp, result);
+    }
+    free(temp.number);
+}
+
+// Calcula x^n como fracción (x es fracción)
+Fraction_t pow_fraction(const Fraction_t* x, int n, size_t size_big) {
+    Fraction_t res;
+    // res = 1/1
+    res.numerator.number = calloc(size_big, sizeof(subsize_t));
+    res.numerator.size = size_big;
+    res.denominator.number = calloc(size_big, sizeof(subsize_t));
+    res.denominator.size = size_big;
+    of_string_to_numbre("1", &res.numerator);
+    of_string_to_numbre("1", &res.denominator);
+
+    for (int i = 0; i < n; ++i) {
+        if (n == 0) {
+            Fraction_t res;
+            res.numerator.number = calloc(size_big, sizeof(subsize_t));
+            res.numerator.size = size_big;
+            res.denominator.number = calloc(size_big, sizeof(subsize_t));
+            res.denominator.size = size_big;
+            of_string_to_numbre("1", &res.numerator);
+            of_string_to_numbre("1", &res.denominator);
+            return res;
+        }
+
+        Fraction_t temp = multiply_fractions(&res, x);
+        free_Fraction_t_inside(&res);
+        res = temp;
+    }
+    return res;
+}
+
+
 

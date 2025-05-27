@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     // Section 2: Float Grande Division Test
-    float_grande resultado_div;
+    BigFloat_t resultado_div;
     BigInt_t number_example1_float = {calloc(SIZE, sizeof(subsize_t)), SIZE};
     BigInt_t number_example2_float = {calloc(SIZE, sizeof(subsize_t)), SIZE};
     number_example1_float.number[0] = 1;
@@ -154,21 +154,56 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
 
+    BigInt_t BigInt8096_a = {calloc(20, sizeof(subsize_t)), 20};
+    BigInt_t resultado_sqrt = {calloc(20, sizeof(subsize_t)), 20};
+    of_string_to_numbre("7", &BigInt8096_a); // número grande
+    sqrt_BigInt(&BigInt8096_a, &resultado_sqrt);
+
+
+    printf("Raíz cuadrada (hex): 0x");
+    hex_dump_BigInt(&resultado_sqrt);
+    printf("\nRaíz cuadrada (decimal): ");
+    decimal_dump_BigInt(&resultado_sqrt);
+    printf("\n");
+    free_BigInt_inside(&resultado_sqrt);
+
+
+    #define BIG_SIZE 40
+    BigFloat_t BigInt8096_a_float;
+    BigInt8096_a_float.number_float.number = calloc(BIG_SIZE, sizeof(subsize_t));
+    BigInt8096_a_float.number_float.size = BIG_SIZE;
+    of_string_to_numbre("2", &BigInt8096_a_float.number_float); // Raíz de 2
+    BigInt8096_a_float.exponente = 0;
+    BigInt8096_a_float.signo = 0;
+
+    BigFloat_t raiz;
+    size_t decimales = 100; // 50 decimales
+    sqrt_BigFloat(&BigInt8096_a_float, &raiz, decimales);
+
+    printf("Raíz de 2 (hasta 50 decimales): ");
+    float__dump_BigInt(&raiz);
+    printf("\n");
+
+    free_BigFloat_inside(&BigInt8096_a_float);
+    free_BigFloat_inside(&raiz);
+
 
     // Free allocated memory
-    free(BigInt8096_1.number);
-    free(BigInt8096_2.number);
-    free(resultadoBigInt8096.number);
-    free(BigInt320_1.number);
-    free(BigInt320_2.number);
-    free(resultadoBigInt320.number);
-    free(base2.number);
-    free(base.number);
-    free(exponente.number);
-    free(exponente2.number);
-    free(m2.number);
-    free(resultado2.number);
-    free(resultado1.number);
+    free_BigInt_inside(&BigInt8096_1);
+    free_BigInt_inside(&BigInt8096_2);
+    free_BigInt_inside(&resultadoBigInt8096);
+    free_BigInt_inside(&BigInt320_1);
+    free_BigInt_inside(&BigInt320_2);
+    free_BigInt_inside(&resultadoBigInt320);
+    free_BigInt_inside(&base2);
+    free_BigInt_inside(&base);
+    free_BigInt_inside(&exponente);
+    free_BigInt_inside(&exponente2);
+    free_BigInt_inside(&m2);
+    free_BigInt_inside(&resultado2);
+    free_BigInt_inside(&resultado1);
+
+    free_BigFloat_inside(&resultado_div);
 
     puts("\nPrograma finalizado.\n");
     return 0;

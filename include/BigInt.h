@@ -81,9 +81,9 @@ typedef struct BigInt_t {
 
 typedef struct {
     BigInt_t number_float;  // Mantisa como un número entero grande
-    int exponente;            // Exponente como un entero simple
-    int signo;                // 0 para positivo, 1 para negativo
-} float_grande;
+    size_t exponente;            // Exponente como un entero simple
+    char signo;                // 0 para positivo, 1 para negativo
+} BigFloat_t;
 
 void of_string_to_numbre(const char* num_str, BigInt_t* big_int);
 size_t count_hex_digit_BigInt(const BigInt_t* big_int);
@@ -91,7 +91,7 @@ size_t count_hex_digit_BigInt(const BigInt_t* big_int);
 // funciones de impresion:
 void hex_dump_BigInt(const BigInt_t* big_int);
 void decimal_dump_BigInt(const BigInt_t* big_int);
-void float__dump_BigInt(float_grande* num);
+void float__dump_BigInt(BigFloat_t* num);
 
 // operaciones aritmeticas o mandejo de numeros:
 void lshift_BigInt(BigInt_t *arr, int shift);
@@ -103,7 +103,7 @@ void pow_BigInt_rapida(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado)
 void pow_BigInt_directa(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
 void pow_BigInt(BigInt_t *base, BigInt_t *exponente, BigInt_t *resultado);
 void div_booth(BigInt_t* dividend, BigInt_t* divisor, BigInt_t* cociente, BigInt_t* residuo);
-void div_to_float_big(BigInt_t* a, BigInt_t* b, float_grande* resultado, size_t* num_digits);
+void div_to_float_big(BigInt_t* a, BigInt_t* b, BigFloat_t* resultado, size_t* num_digits);
 void modpow_BigInt(
     const BigInt_t* base, const BigInt_t* exponente, 
     const BigInt_t* modulo, BigInt_t* resultado
@@ -111,11 +111,19 @@ void modpow_BigInt(
 void complemento_a_dos(BigInt_t* big_int);
 void mult_arr(BigInt_t* a, BigInt_t* b, BigInt_t* resultado);
 uint64_t add_with_overflow(subsize_t a, subsize_t b, subsize_t* resultado);
-void normalizar_float_grande(float_grande* num);
+void normalizar_BigFloat(BigFloat_t* num);
 void mult_x10(BigInt_t* big_int);
 void div_x10(BigInt_t* big_int);
 void div_x2(BigInt_t* big_int);
 
+void sqrt_BigInt(const BigInt_t* n, BigInt_t* raiz);
+void sqrt_BigFloat(const BigFloat_t* n, BigFloat_t* raiz, size_t decimales);
+
 // funciones de comparacion y condicionales
 bool is_zero(const BigInt_t* big_int);
+
+void free_BigInt_inside(BigInt_t* number);
+void free_BigFloat_inside(BigFloat_t* number);
+
+
 #endif
